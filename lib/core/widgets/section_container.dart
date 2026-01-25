@@ -1,5 +1,6 @@
-import 'package:algorythm_app/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+
+import '../theme/app_colors.dart';
 
 class SectionContainer extends StatelessWidget {
   final EdgeInsetsGeometry padding;

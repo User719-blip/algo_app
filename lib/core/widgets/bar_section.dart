@@ -1,6 +1,7 @@
-import 'package:algorythm_app/presentation/models/visual_bar.dart';
-import 'package:algorythm_app/presentation/widget/bar_widget.dart';
 import 'package:flutter/material.dart';
+
+import '../models/visual_bar.dart';
+import 'bar_widget.dart';
 
 class BarSection extends StatelessWidget {
   final List<VisualBar> bars;

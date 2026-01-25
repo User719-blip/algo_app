@@ -1,5 +1,5 @@
-import 'package:algorythm_app/presentation/models/complexity_item.dart';
-import 'package:algorythm_app/presentation/models/dry_run_pass.dart';
+import 'complexity_item.dart';
+import 'dry_run_pass.dart';
 
 class AlgorithmPageData {
   final String name;

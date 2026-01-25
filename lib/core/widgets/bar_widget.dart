@@ -1,6 +1,7 @@
-import 'package:algorythm_app/presentation/models/visual_bar.dart';
-import 'package:algorythm_app/presentation/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+
+import '../models/visual_bar.dart';
+import '../theme/app_colors.dart';
 
 class Bar extends StatelessWidget {
   final VisualBar bar;

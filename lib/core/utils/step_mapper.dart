@@ -1,7 +1,8 @@
 import 'package:algorythm_app/domain/algorithm_step.dart';
 import 'package:algorythm_app/domain/step_type.dart';
-import 'package:algorythm_app/presentation/models/visual_bar.dart';
-import 'package:algorythm_app/presentation/models/visual_tile.dart';
+
+import '../models/visual_bar.dart';
+import '../models/visual_tile.dart';
 
 List<VisualBar> mapStepToBars(AlgorithmStep step) {
   return List.generate(step.values.length, (index) {

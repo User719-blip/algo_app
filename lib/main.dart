@@ -1,5 +1,5 @@
-import 'package:algorythm_app/presentation/pages/sorting_visualizer_page.dart';
-import 'package:algorythm_app/presentation/theme/app_theme.dart';
+import 'package:algorythm_app/features/sorting/presentation/pages/sorting_algorithms_page.dart';
+import 'package:algorythm_app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -14,7 +14,7 @@ class AlgorythmApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: AppTheme.build(),
-      home: const SortingVisualizerPage(),
+      home: const SortingAlgorithmsPage(),
     );
   }
 }

@@ -1,313 +1,66 @@
 import 'dart:async';
 
-import 'package:algorythm_app/algorithms/base_algorithm.dart';
-import 'package:algorythm_app/algorithms/sorting/bubble_sort.dart';
-import 'package:algorythm_app/algorithms/sorting/selection_sort.dart';
+import 'package:algorythm_app/core/models/algorithm_page_data.dart';
+import 'package:algorythm_app/core/models/visual_bar.dart';
+import 'package:algorythm_app/core/models/visual_tile.dart';
+import 'package:algorythm_app/core/theme/app_colors.dart';
+import 'package:algorythm_app/core/utils/step_mapper.dart';
+import 'package:algorythm_app/core/widgets/algorithm_animation_panel.dart';
+import 'package:algorythm_app/core/widgets/bar_section.dart';
+import 'package:algorythm_app/core/widgets/bullet_text.dart';
+import 'package:algorythm_app/core/widgets/code_block.dart';
+import 'package:algorythm_app/core/widgets/playback_controls.dart';
+import 'package:algorythm_app/core/widgets/section_container.dart';
+import 'package:algorythm_app/core/widgets/section_paragraph.dart';
+import 'package:algorythm_app/core/widgets/section_subheading.dart';
+import 'package:algorythm_app/core/widgets/section_title.dart';
+import 'package:algorythm_app/core/widgets/tile_section.dart';
 import 'package:algorythm_app/domain/algorithm_step.dart';
 import 'package:algorythm_app/domain/step_type.dart';
-import 'package:algorythm_app/presentation/models/algorithm_page_data.dart';
-import 'package:algorythm_app/presentation/models/complexity_item.dart';
-import 'package:algorythm_app/presentation/models/dry_run_pass.dart';
-import 'package:algorythm_app/presentation/models/visual_bar.dart';
-import 'package:algorythm_app/presentation/models/visual_tile.dart';
-import 'package:algorythm_app/presentation/theme/app_colors.dart';
-import 'package:algorythm_app/presentation/utils/step_mapper.dart';
-import 'package:algorythm_app/presentation/widget/algorithm_animation_panel.dart';
-import 'package:algorythm_app/presentation/widget/bar_section.dart';
-import 'package:algorythm_app/presentation/widget/bullet_text.dart';
-import 'package:algorythm_app/presentation/widget/code_block.dart';
-import 'package:algorythm_app/presentation/widget/playback_controls.dart';
-import 'package:algorythm_app/presentation/widget/section_container.dart';
-import 'package:algorythm_app/presentation/widget/section_paragraph.dart';
-import 'package:algorythm_app/presentation/widget/section_subheading.dart';
-import 'package:algorythm_app/presentation/widget/section_title.dart';
-import 'package:algorythm_app/presentation/widget/tile_section.dart';
+import 'package:algorythm_app/features/sorting/data/sorting_algorithms.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-
-const List<int> _visualInput = [5, 1, 4, 2, 8];
-
-const String _bubblePseudoCode = '''procedure bubbleSort(arr):
-  n <- length(arr)
-  for i from 0 to n - 2:
-    swapped <- false
-    for j from 0 to n - i - 2:
-      if arr[j] > arr[j + 1]:
-        swap arr[j], arr[j + 1]
-        swapped <- true
-    if not swapped:
-      break
-''';
-
-const String _bubbleCpp = '''void bubbleSort(std::vector<int>& arr) {
-  for (std::size_t i = 0; i + 1 < arr.size(); ++i) {
-    bool swapped = false;
-    for (std::size_t j = 0; j + 1 < arr.size() - i; ++j) {
-      if (arr[j] > arr[j + 1]) {
-        std::swap(arr[j], arr[j + 1]);
-        swapped = true;
-      }
-    }
-    if (!swapped) {
-      break;
-    }
-  }
-}
-''';
-
-const String _bubblePython = '''def bubble_sort(values):
-    arr = values[:]
-    for i in range(len(arr) - 1):
-        swapped = False
-        for j in range(len(arr) - i - 1):
-            if arr[j] > arr[j + 1]:
-                arr[j], arr[j + 1] = arr[j + 1], arr[j]
-                swapped = True
-        if not swapped:
-            break
-    return arr
-''';
-
-const String _bubbleJava = '''public static void bubbleSort(int[] arr) {
-    for (int i = 0; i < arr.length - 1; i++) {
-        boolean swapped = false;
-        for (int j = 0; j < arr.length - i - 1; j++) {
-            if (arr[j] > arr[j + 1]) {
-                int temp = arr[j];
-                arr[j] = arr[j + 1];
-                arr[j + 1] = temp;
-                swapped = true;
-            }
-        }
-        if (!swapped) {
-            break;
-        }
-    }
-}
-''';
-
-const String _selectionPseudoCode = '''procedure selectionSort(arr):
-  n <- length(arr)
-  for i from 0 to n - 2:
-    minIndex <- i
-    for j from i + 1 to n - 1:
-      if arr[j] < arr[minIndex]:
-        minIndex <- j
-    if minIndex != i:
-      swap arr[i], arr[minIndex]
-''';
-
-const String _selectionCpp = '''void selectionSort(std::vector<int>& arr) {
-  for (std::size_t i = 0; i + 1 < arr.size(); ++i) {
-    std::size_t minIndex = i;
-    for (std::size_t j = i + 1; j < arr.size(); ++j) {
-      if (arr[j] < arr[minIndex]) {
-        minIndex = j;
-      }
-    }
-    if (minIndex != i) {
-      std::swap(arr[i], arr[minIndex]);
-    }
-  }
-}
-''';
-
-const String _selectionPython = '''def selection_sort(values):
-    arr = values[:]
-    for i in range(len(arr) - 1):
-        min_index = i
-        for j in range(i + 1, len(arr)):
-            if arr[j] < arr[min_index]:
-                min_index = j
-        if min_index != i:
-            arr[i], arr[min_index] = arr[min_index], arr[i]
-    return arr
-''';
-
-const String _selectionJava = '''public static void selectionSort(int[] arr) {
-    for (int i = 0; i < arr.length - 1; i++) {
-        int minIndex = i;
-        for (int j = i + 1; j < arr.length; j++) {
-            if (arr[j] < arr[minIndex]) {
-                minIndex = j;
-            }
-        }
-        if (minIndex != i) {
-            int temp = arr[i];
-            arr[i] = arr[minIndex];
-            arr[minIndex] = temp;
-        }
-    }
-}
-''';
-
-const AlgorithmPageData _bubbleSortData = AlgorithmPageData(
-  name: 'Bubble Sort',
-  tagline: 'See adjacent swaps push heavier values toward the end each pass.',
-  conceptSummary:
-      'Bubble Sort is a comparison-driven routine that repeatedly walks through a list, switching neighbouring values that appear in the wrong order. After each pass the largest value "bubbles" to the end of the list.',
-  conceptPoints: [
-    'Start at the beginning of the array and compare items in pairs.',
-    'Swap the pair when the left item is larger than the right one.',
-    'Shrink the unsorted portion from the end after every sweep.',
-    'Abort early if a pass completes without any swaps.',
-  ],
-  conceptUsage:
-      'Reach for Bubble Sort when teaching comparison-based sorting, animating algorithm intuition, or working with tiny datasets where simplicity matters more than speed.',
-  dryRuns: [
-    DryRunPass(
-      title: 'Pass 1',
-      highlight: 'Largest value moves to the far right after the first sweep.',
-      steps: [
-        'Compare 5 and 1 -> swap -> [1, 5, 4, 2, 8]',
-        'Compare 5 and 4 -> swap -> [1, 4, 5, 2, 8]',
-        'Compare 5 and 2 -> swap -> [1, 4, 2, 5, 8]',
-        'Compare 5 and 8 -> keep -> [1, 4, 2, 5, 8]',
-      ],
-    ),
-    DryRunPass(
-      title: 'Pass 2',
-      highlight:
-          'Next heaviest element settles one slot before the sorted tail.',
-      steps: [
-        'Compare 1 and 4 -> keep -> [1, 4, 2, 5, 8]',
-        'Compare 4 and 2 -> swap -> [1, 2, 4, 5, 8]',
-        'Compare 4 and 5 -> keep -> [1, 2, 4, 5, 8]',
-      ],
-    ),
-    DryRunPass(
-      title: 'Pass 3',
-      highlight: 'No swaps means the list is sorted; algorithm stops early.',
-      steps: [
-        'Compare 1 and 2 -> keep -> [1, 2, 4, 5, 8]',
-        'Compare 2 and 4 -> keep -> [1, 2, 4, 5, 8]',
-      ],
-    ),
-  ],
-  complexity: [
-    ComplexityItem(
-      title: 'Best Case',
-      complexity: 'O(n)',
-      note: 'Already sorted lists need just one pass to confirm order.',
-    ),
-    ComplexityItem(
-      title: 'Average Case',
-      complexity: 'O(n²)',
-      note: 'Roughly half of the neighbouring pairs require inspection.',
-    ),
-    ComplexityItem(
-      title: 'Worst Case',
-      complexity: 'O(n²)',
-      note: 'A reversed list triggers every possible comparison and swap.',
-    ),
-    ComplexityItem(
-      title: 'Space',
-      complexity: 'O(1)',
-      note: 'Sorting happens in-place with a single temporary variable.',
-    ),
-  ],
-  pseudoCode: _bubblePseudoCode,
-  implementations: {
-    'C++': _bubbleCpp,
-    'Python': _bubblePython,
-    'Java': _bubbleJava,
-  },
-);
-
-const AlgorithmPageData _selectionSortData = AlgorithmPageData(
-  name: 'Selection Sort',
-  tagline:
-      'Trace how Selection Sort grows a sorted prefix by scanning for minima.',
-  conceptSummary:
-      'Selection Sort splits the list into a sorted prefix and an unsorted suffix. Each pass scans the suffix to find the minimum element and swaps it into the front, expanding the sorted region.',
-  conceptPoints: [
-    'Assume the first unsorted value is the current minimum.',
-    'Walk the suffix to discover a smaller candidate index.',
-    'Swap the discovered minimum into the front of the suffix.',
-    'Grow the sorted prefix until no unsorted values remain.',
-  ],
-  conceptUsage:
-      'Use Selection Sort to highlight search-and-swap patterns, prove algorithm invariants, or work with tiny arrays where clarity is more important than speed.',
-  dryRuns: [
-    DryRunPass(
-      title: 'Pass 1',
-      highlight: 'Find the smallest value and move it into the first slot.',
-      steps: [
-        'Assume index 0 (value 5) is the minimum.',
-        'Compare value 1 with current minimum 5 -> update minimum to index 1.',
-        'Compare value 4 with minimum 1 -> keep current minimum.',
-        'Compare value 2 with minimum 1 -> keep current minimum.',
-        'Compare value 8 with minimum 1 -> keep current minimum.',
-        'Swap index 0 with index 1 -> [1, 5, 4, 2, 8].',
-        'Mark index 0 as sorted.',
-      ],
-    ),
-    DryRunPass(
-      title: 'Pass 2',
-      highlight: 'Search the remaining suffix for the next smallest value.',
-      steps: [
-        'Assume index 1 (value 5) is the new minimum.',
-        'Compare value 4 with minimum 5 -> update minimum to index 2.',
-        'Compare value 2 with minimum 4 -> update minimum to index 3.',
-        'Compare value 8 with minimum 2 -> keep current minimum.',
-        'Swap index 1 with index 3 -> [1, 2, 4, 5, 8].',
-        'Mark index 1 as sorted.',
-      ],
-    ),
-    DryRunPass(
-      title: 'Pass 3',
-      highlight: 'Sorted prefix expands even when no swap is required.',
-      steps: [
-        'Assume index 2 (value 4) is the minimum.',
-        'Compare value 5 with minimum 4 -> keep current minimum.',
-        'Compare value 8 with minimum 4 -> keep current minimum.',
-        'No swap needed; index 2 stays in place.',
-        'Mark index 2 as sorted; the remaining tail is already ordered.',
-      ],
-    ),
-  ],
-  complexity: [
-    ComplexityItem(
-      title: 'Best Case',
-      complexity: 'O(n²)',
-      note: 'Selection Sort still scans the suffix even when already sorted.',
-    ),
-    ComplexityItem(
-      title: 'Average Case',
-      complexity: 'O(n²)',
-      note: 'Every pass performs a full scan of the shrinking suffix.',
-    ),
-    ComplexityItem(
-      title: 'Worst Case',
-      complexity: 'O(n²)',
-      note: 'Reversed input does not change the fixed scan pattern.',
-    ),
-    ComplexityItem(
-      title: 'Space',
-      complexity: 'O(1)',
-      note: 'In-place swapping only needs one temporary variable.',
-    ),
-  ],
-  pseudoCode: _selectionPseudoCode,
-  implementations: {
-    'C++': _selectionCpp,
-    'Python': _selectionPython,
-    'Java': _selectionJava,
-  },
-);
-
-enum _SortingAlgorithm { selection, bubble }
-
-class _AlgorithmConfig {
-  final Algorithm algorithm;
-  final AlgorithmPageData data;
-
-  const _AlgorithmConfig({required this.algorithm, required this.data});
-}
 
 enum _PlaybackChannel { bars, tiles }
 
+class _PlaybackState extends ChangeNotifier {
+  _PlaybackState({int index = 0, bool playing = false})
+    : _index = index,
+      _playing = playing;
+
+  int _index;
+  bool _playing;
+
+  int get index => _index;
+  bool get playing => _playing;
+
+  void update({int? index, bool? playing, bool notify = true}) {
+    bool hasChanged = false;
+    if (index != null && index != _index) {
+      _index = index;
+      hasChanged = true;
+    }
+    if (playing != null && playing != _playing) {
+      _playing = playing;
+      hasChanged = true;
+    }
+    if (hasChanged && notify) {
+      notifyListeners();
+    }
+  }
+
+  void reset({bool notify = true}) {
+    update(index: 0, playing: false, notify: notify);
+  }
+}
+
 class SortingVisualizerPage extends StatefulWidget {
-  const SortingVisualizerPage({super.key});
+  final SortingAlgorithmId initialAlgorithm;
+
+  const SortingVisualizerPage({
+    super.key,
+    this.initialAlgorithm = SortingAlgorithmId.selection,
+  });
 
   @override
   State<SortingVisualizerPage> createState() => _SortingVisualizerPageState();
@@ -316,55 +69,37 @@ class SortingVisualizerPage extends StatefulWidget {
 class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
   static const Duration _playbackInterval = Duration(milliseconds: 600);
 
-  late final Map<_SortingAlgorithm, _AlgorithmConfig> _configs;
-  late _SortingAlgorithm _activeAlgorithm;
+  late SortingAlgorithmId _activeAlgorithm;
   late AlgorithmPageData _data;
   late List<AlgorithmStep> _steps;
-
-  int _barIndex = 0;
-  int _tileIndex = 0;
 
   Timer? _barTimer;
   Timer? _tileTimer;
 
-  bool _barPlaying = false;
-  bool _tilePlaying = false;
+  late final _PlaybackState _barPlayback;
+  late final _PlaybackState _tilePlayback;
 
   @override
   void initState() {
     super.initState();
-    _configs = _buildConfigs();
-    _applyAlgorithm(_SortingAlgorithm.selection, initial: true);
+    _barPlayback = _PlaybackState();
+    _tilePlayback = _PlaybackState();
+    _applyAlgorithm(widget.initialAlgorithm, initial: true);
   }
 
-  Map<_SortingAlgorithm, _AlgorithmConfig> _buildConfigs() {
-    return {
-      _SortingAlgorithm.selection: _AlgorithmConfig(
-        algorithm: SelectionSort(),
-        data: _selectionSortData,
-      ),
-      _SortingAlgorithm.bubble: _AlgorithmConfig(
-        algorithm: BubbleSort(),
-        data: _bubbleSortData,
-      ),
-    };
-  }
+  void _applyAlgorithm(SortingAlgorithmId algorithm, {bool initial = false}) {
+    _cancelTimer(_PlaybackChannel.bars);
+    _cancelTimer(_PlaybackChannel.tiles);
 
-  void _applyAlgorithm(_SortingAlgorithm algorithm, {bool initial = false}) {
-    _pausePlayback(_PlaybackChannel.bars, updateState: false);
-    _pausePlayback(_PlaybackChannel.tiles, updateState: false);
-
-    final config = _configs[algorithm]!;
-    final steps = config.algorithm.generateSteps(_visualInput);
+    final config = sortingAlgorithmCatalog[algorithm]!;
+    final steps = config.algorithm.generateSteps(kSortingDemoInput);
 
     void assign() {
       _activeAlgorithm = algorithm;
       _data = config.data;
       _steps = steps;
-      _barIndex = 0;
-      _tileIndex = 0;
-      _barPlaying = false;
-      _tilePlaying = false;
+      _barPlayback.reset(notify: !initial);
+      _tilePlayback.reset(notify: !initial);
     }
 
     if (initial) {
@@ -376,135 +111,108 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
 
   @override
   void dispose() {
-    _barTimer?.cancel();
-    _tileTimer?.cancel();
+    _cancelTimer(_PlaybackChannel.bars);
+    _cancelTimer(_PlaybackChannel.tiles);
+    _barPlayback.dispose();
+    _tilePlayback.dispose();
     super.dispose();
   }
 
-  void _startPlayback(_PlaybackChannel channel) {
-    _pausePlayback(channel, updateState: false);
-
-    void tick() {
-      if (!mounted) {
-        return;
-      }
-      final int currentIndex = channel == _PlaybackChannel.bars
-          ? _barIndex
-          : _tileIndex;
-      if (currentIndex >= _steps.length - 1) {
-        _pausePlayback(channel, updateState: false);
-        setState(() {});
-        return;
-      }
-      setState(() {
-        if (channel == _PlaybackChannel.bars) {
-          _barIndex++;
-        } else {
-          _tileIndex++;
-        }
-      });
-    }
-
-    final timer = Timer.periodic(_playbackInterval, (_) => tick());
-    setState(() {
-      if (channel == _PlaybackChannel.bars) {
-        _barTimer = timer;
-        _barPlaying = true;
-      } else {
-        _tileTimer = timer;
-        _tilePlaying = true;
-      }
-    });
+  _PlaybackState _playbackFor(_PlaybackChannel channel) {
+    return channel == _PlaybackChannel.bars ? _barPlayback : _tilePlayback;
   }
 
-  void _pausePlayback(_PlaybackChannel channel, {bool updateState = true}) {
+  Timer? _timerFor(_PlaybackChannel channel) {
+    return channel == _PlaybackChannel.bars ? _barTimer : _tileTimer;
+  }
+
+  void _storeTimer(_PlaybackChannel channel, Timer? timer) {
     if (channel == _PlaybackChannel.bars) {
-      _barTimer?.cancel();
-      _barTimer = null;
-      if (updateState) {
-        setState(() => _barPlaying = false);
-      } else {
-        _barPlaying = false;
-      }
+      _barTimer = timer;
     } else {
-      _tileTimer?.cancel();
-      _tileTimer = null;
-      if (updateState) {
-        setState(() => _tilePlaying = false);
-      } else {
-        _tilePlaying = false;
-      }
+      _tileTimer = timer;
     }
+  }
+
+  void _cancelTimer(_PlaybackChannel channel) {
+    final Timer? timer = _timerFor(channel);
+    if (timer != null) {
+      timer.cancel();
+    }
+    _storeTimer(channel, null);
+  }
+
+  void _handleTick(_PlaybackChannel channel, Timer timer) {
+    if (!mounted) {
+      timer.cancel();
+      return;
+    }
+
+    final playback = _playbackFor(channel);
+    final int currentIndex = playback.index;
+    if (currentIndex >= _steps.length - 1) {
+      _cancelTimer(channel);
+      playback.update(playing: false);
+      return;
+    }
+
+    playback.update(index: currentIndex + 1);
+  }
+
+  void _startPlayback(_PlaybackChannel channel) {
+    _cancelTimer(channel);
+
+    final timer = Timer.periodic(
+      _playbackInterval,
+      (currentTimer) => _handleTick(channel, currentTimer),
+    );
+
+    _storeTimer(channel, timer);
+    _playbackFor(channel).update(playing: true);
+  }
+
+  void _pausePlayback(_PlaybackChannel channel) {
+    _cancelTimer(channel);
+    _playbackFor(channel).update(playing: false);
   }
 
   void _togglePlayback(_PlaybackChannel channel) {
-    final bool isPlaying = channel == _PlaybackChannel.bars
-        ? _barPlaying
-        : _tilePlaying;
-    final int currentIndex = channel == _PlaybackChannel.bars
-        ? _barIndex
-        : _tileIndex;
-
-    if (isPlaying) {
+    final playback = _playbackFor(channel);
+    if (playback.playing) {
       _pausePlayback(channel);
       return;
     }
 
-    if (currentIndex >= _steps.length - 1) {
-      setState(() {
-        if (channel == _PlaybackChannel.bars) {
-          _barIndex = 0;
-        } else {
-          _tileIndex = 0;
-        }
-      });
+    if (playback.index >= _steps.length - 1) {
+      playback.update(index: 0);
     }
+
     _startPlayback(channel);
   }
 
   void _stepForward(_PlaybackChannel channel) {
-    final int currentIndex = channel == _PlaybackChannel.bars
-        ? _barIndex
-        : _tileIndex;
-    if (currentIndex >= _steps.length - 1) {
+    final playback = _playbackFor(channel);
+    if (playback.index >= _steps.length - 1) {
       return;
     }
+
     _pausePlayback(channel);
-    setState(() {
-      if (channel == _PlaybackChannel.bars) {
-        _barIndex++;
-      } else {
-        _tileIndex++;
-      }
-    });
+    playback.update(index: playback.index + 1);
   }
 
   void _stepBackward(_PlaybackChannel channel) {
-    final int currentIndex = channel == _PlaybackChannel.bars
-        ? _barIndex
-        : _tileIndex;
-    if (currentIndex == 0) {
+    final playback = _playbackFor(channel);
+    if (playback.index == 0) {
       return;
     }
+
     _pausePlayback(channel);
-    setState(() {
-      if (channel == _PlaybackChannel.bars) {
-        _barIndex--;
-      } else {
-        _tileIndex--;
-      }
-    });
+    playback.update(index: playback.index - 1);
   }
 
   void _resetPlayback(_PlaybackChannel channel) {
     _pausePlayback(channel);
-    setState(() {
-      if (channel == _PlaybackChannel.bars) {
-        _barIndex = 0;
-      } else {
-        _tileIndex = 0;
-      }
-    });
+    _playbackFor(channel).update(index: 0);
   }
 
   double _progressFor(int index) {
@@ -547,11 +255,6 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final AlgorithmStep barStep = _steps[_barIndex];
-    final AlgorithmStep tileStep = _steps[_tileIndex];
-
-    final List<VisualBar> bars = mapStepToBars(barStep);
-    final List<VisualTile> tiles = mapStepToTile(tileStep);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -586,18 +289,16 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
                 const SizedBox(height: 20),
                 Align(
                   alignment: Alignment.center,
-                  child: SegmentedButton<_SortingAlgorithm>(
+                  child: SegmentedButton<SortingAlgorithmId>(
                     showSelectedIcon: false,
-                    segments: const [
-                      ButtonSegment(
-                        value: _SortingAlgorithm.selection,
-                        label: Text('Selection Sort'),
-                      ),
-                      ButtonSegment(
-                        value: _SortingAlgorithm.bubble,
-                        label: Text('Bubble Sort'),
-                      ),
-                    ],
+                    segments: sortingAlgorithmList
+                        .map(
+                          (config) => ButtonSegment<SortingAlgorithmId>(
+                            value: config.id,
+                            label: Text(config.data.name),
+                          ),
+                        )
+                        .toList(),
                     selected: {_activeAlgorithm},
                     style: ButtonStyle(
                       padding: const WidgetStatePropertyAll(
@@ -637,9 +338,52 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
                 const SizedBox(height: 32),
                 _buildConceptSection(theme),
                 const SizedBox(height: 28),
-                _buildVisualizationSection(theme, bars, barStep),
+                AnimatedBuilder(
+                  animation: _barPlayback,
+                  builder: (context, _) {
+                    final int barIndex = _barPlayback.index;
+                    final AlgorithmStep barStep = _steps[barIndex];
+                    final List<VisualBar> bars = mapStepToBars(barStep);
+                    return _buildVisualizationSection(
+                      theme,
+                      bars,
+                      barStep,
+                      barIndex,
+                      _barPlayback.playing,
+                    );
+                  },
+                ),
                 const SizedBox(height: 28),
-                _buildResourcesSection(theme, bars, tiles, barStep, tileStep),
+                AnimatedBuilder(
+                  animation: _barPlayback,
+                  builder: (context, _) {
+                    final int barIndex = _barPlayback.index;
+                    final AlgorithmStep barStep = _steps[barIndex];
+                    final List<VisualBar> bars = mapStepToBars(barStep);
+                    final bool barPlaying = _barPlayback.playing;
+
+                    return AnimatedBuilder(
+                      animation: _tilePlayback,
+                      builder: (context, __) {
+                        final int tileIndex = _tilePlayback.index;
+                        final AlgorithmStep tileStep = _steps[tileIndex];
+                        final List<VisualTile> tiles = mapStepToTile(tileStep);
+
+                        return _buildResourcesSection(
+                          theme,
+                          bars,
+                          tiles,
+                          barStep,
+                          tileStep,
+                          barIndex,
+                          barPlaying,
+                          tileIndex,
+                          _tilePlayback.playing,
+                        );
+                      },
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -675,8 +419,10 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
     ThemeData theme,
     List<VisualBar> bars,
     AlgorithmStep barStep,
+    int barIndex,
+    bool isPlaying,
   ) {
-    final double barProgress = _progressFor(_barIndex);
+    final double barProgress = _progressFor(barIndex);
 
     return SectionContainer(
       child: Column(
@@ -717,25 +463,25 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
               ControlIconButton(
                 icon: Icons.rotate_left,
                 tooltip: 'Reset to start',
-                onTap: _barIndex == 0 && !_barPlaying
+                onTap: barIndex == 0 && !isPlaying
                     ? null
                     : () => _resetPlayback(_PlaybackChannel.bars),
               ),
               ControlIconButton(
                 icon: Icons.skip_previous,
                 tooltip: 'Previous step',
-                onTap: _barIndex == 0
+                onTap: barIndex == 0
                     ? null
                     : () => _stepBackward(_PlaybackChannel.bars),
               ),
               PlayPauseButton(
-                isPlaying: _barPlaying,
+                isPlaying: isPlaying,
                 onTap: () => _togglePlayback(_PlaybackChannel.bars),
               ),
               ControlIconButton(
                 icon: Icons.skip_next,
                 tooltip: 'Next step',
-                onTap: _barIndex >= _steps.length - 1
+                onTap: barIndex >= _steps.length - 1
                     ? null
                     : () => _stepForward(_PlaybackChannel.bars),
               ),
@@ -757,7 +503,7 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
           ),
           const SizedBox(height: 10),
           Text(
-            'Step ${_barIndex + 1} of ${_steps.length}',
+            'Step ${barIndex + 1} of ${_steps.length}',
             style: _highlightStyle(theme),
             textAlign: TextAlign.center,
           ),
@@ -820,9 +566,13 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
     List<VisualTile> tiles,
     AlgorithmStep barStep,
     AlgorithmStep tileStep,
+    int barIndex,
+    bool barPlaying,
+    int tileIndex,
+    bool tilePlaying,
   ) {
-    final double barProgress = _progressFor(_barIndex);
-    final double tileProgress = _progressFor(_tileIndex);
+    final double barProgress = _progressFor(barIndex);
+    final double tileProgress = _progressFor(tileIndex);
 
     return SectionContainer(
       child: Column(
@@ -849,19 +599,19 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
                       description: _stepLabel(barStep),
                       visual: BarSection(bars: bars),
                       accent: _accentForStep(barStep),
-                      isPlaying: _barPlaying,
+                      isPlaying: barPlaying,
                       onPlayPause: () => _togglePlayback(_PlaybackChannel.bars),
-                      onStepBack: _barIndex == 0
+                      onStepBack: barIndex == 0
                           ? null
                           : () => _stepBackward(_PlaybackChannel.bars),
-                      onStepForward: _barIndex >= _steps.length - 1
+                      onStepForward: barIndex >= _steps.length - 1
                           ? null
                           : () => _stepForward(_PlaybackChannel.bars),
-                      onReset: _barIndex == 0 && !_barPlaying
+                      onReset: barIndex == 0 && !barPlaying
                           ? null
                           : () => _resetPlayback(_PlaybackChannel.bars),
                       progress: barProgress,
-                      stepLabel: 'Step ${_barIndex + 1} / ${_steps.length}',
+                      stepLabel: 'Step ${barIndex + 1} / ${_steps.length}',
                     ),
                   ),
                   SizedBox(
@@ -871,20 +621,20 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
                       description: _stepLabel(tileStep),
                       visual: TileSection(tiles: tiles),
                       accent: _accentForStep(tileStep),
-                      isPlaying: _tilePlaying,
+                      isPlaying: tilePlaying,
                       onPlayPause: () =>
                           _togglePlayback(_PlaybackChannel.tiles),
-                      onStepBack: _tileIndex == 0
+                      onStepBack: tileIndex == 0
                           ? null
                           : () => _stepBackward(_PlaybackChannel.tiles),
-                      onStepForward: _tileIndex >= _steps.length - 1
+                      onStepForward: tileIndex >= _steps.length - 1
                           ? null
                           : () => _stepForward(_PlaybackChannel.tiles),
-                      onReset: _tileIndex == 0 && !_tilePlaying
+                      onReset: tileIndex == 0 && !tilePlaying
                           ? null
                           : () => _resetPlayback(_PlaybackChannel.tiles),
                       progress: tileProgress,
-                      stepLabel: 'Step ${_tileIndex + 1} / ${_steps.length}',
+                      stepLabel: 'Step ${tileIndex + 1} / ${_steps.length}',
                     ),
                   ),
                 ],

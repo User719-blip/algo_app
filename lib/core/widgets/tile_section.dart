@@ -1,6 +1,7 @@
-import 'package:algorythm_app/presentation/models/visual_tile.dart';
-import 'package:algorythm_app/presentation/widget/square_tile.dart';
 import 'package:flutter/material.dart';
+
+import '../models/visual_tile.dart';
+import 'square_tile.dart';
 
 class TileSection extends StatelessWidget {
   final List<VisualTile> tiles;
