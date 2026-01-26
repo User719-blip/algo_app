@@ -1,11 +1,12 @@
 import 'package:algorythm_app/algorithms/base_algorithm.dart';
 import 'package:algorythm_app/algorithms/sorting/bubble_sort.dart';
+import 'package:algorythm_app/algorithms/sorting/insertion_sort.dart';
 import 'package:algorythm_app/algorithms/sorting/selection_sort.dart';
 import 'package:algorythm_app/core/models/algorithm_page_data.dart';
 import 'package:algorythm_app/core/models/complexity_item.dart';
 import 'package:algorythm_app/core/models/dry_run_pass.dart';
 
-enum SortingAlgorithmId { selection, bubble }
+enum SortingAlgorithmId { selection, insertion, bubble }
 
 class SortingAlgorithmConfig {
   final SortingAlgorithmId id;
@@ -135,6 +136,54 @@ const String _selectionJava = '''public static void selectionSort(int[] arr) {
 }
 ''';
 
+const String _insertionPseudoCode = '''procedure insertionSort(arr):
+  for i from 1 to length(arr) - 1:
+  key <- arr[i]
+  j <- i - 1
+  while j >= 0 and arr[j] > key:
+    arr[j + 1] <- arr[j]
+    j <- j - 1
+  arr[j + 1] <- key
+''';
+
+const String _insertionCpp = '''void insertionSort(std::vector<int>& arr) {
+  for (std::size_t i = 1; i < arr.size(); ++i) {
+  int key = arr[i];
+  std::size_t j = i;
+  while (j > 0 && arr[j - 1] > key) {
+    arr[j] = arr[j - 1];
+    --j;
+  }
+  arr[j] = key;
+  }
+}
+''';
+
+const String _insertionPython = '''def insertion_sort(values):
+  arr = values[:]
+  for i in range(1, len(arr)):
+    key = arr[i]
+    j = i - 1
+    while j >= 0 and arr[j] > key:
+      arr[j + 1] = arr[j]
+      j -= 1
+    arr[j + 1] = key
+  return arr
+''';
+
+const String _insertionJava = '''public static void insertionSort(int[] arr) {
+  for (int i = 1; i < arr.length; i++) {
+    int key = arr[i];
+    int j = i - 1;
+    while (j >= 0 && arr[j] > key) {
+      arr[j + 1] = arr[j];
+      j--;
+    }
+    arr[j + 1] = key;
+  }
+}
+''';
+
 final SortingAlgorithmConfig selectionSortConfig = SortingAlgorithmConfig(
   id: SortingAlgorithmId.selection,
   algorithm: SelectionSort(),
@@ -221,6 +270,82 @@ final SortingAlgorithmConfig selectionSortConfig = SortingAlgorithmConfig(
   ),
 );
 
+final SortingAlgorithmConfig insertionSortConfig = SortingAlgorithmConfig(
+  id: SortingAlgorithmId.insertion,
+  algorithm: InsertionSort(),
+  data: AlgorithmPageData(
+    name: 'Insertion Sort',
+    tagline: 'Slide each element into place as the sorted prefix grows.',
+    conceptSummary:
+        'Insertion Sort builds a sorted prefix one element at a time, sliding larger entries to the right until the current key fits its position.',
+    conceptPoints: [
+      'Treat the left portion of the array as an already sorted prefix.',
+      'Choose the next value (the key) and compare it with elements to its left.',
+      'Shift larger elements one slot to the right to make room for the key.',
+      'Drop the key into the gap and extend the sorted prefix by one.',
+    ],
+    conceptUsage:
+        'Reach for Insertion Sort when the input is small, nearly sorted, or streaming in real time so partial results stay ordered.',
+    dryRuns: [
+      DryRunPass(
+        title: 'Pass 1',
+        highlight:
+            'Insert value 1 before 5 to establish the first sorted pair.',
+        steps: [
+          'Key = 1 compares with 5 -> shift 5 right -> [5, 5, 4, 2, 8].',
+          'Place key 1 at index 0 -> [1, 5, 4, 2, 8].',
+        ],
+      ),
+      DryRunPass(
+        title: 'Pass 2',
+        highlight: 'Value 4 slots between 1 and 5 after one comparison.',
+        steps: [
+          'Key = 4 compares with 5 -> shift 5 right -> [1, 5, 5, 2, 8].',
+          'Place key 4 at index 1 -> [1, 4, 5, 2, 8].',
+        ],
+      ),
+      DryRunPass(
+        title: 'Pass 3',
+        highlight:
+            'Value 2 ripples left through multiple shifts before landing.',
+        steps: [
+          'Key = 2 compares with 5 -> shift 5 right -> [1, 4, 5, 5, 8].',
+          'Key = 2 compares with 4 -> shift 4 right -> [1, 4, 4, 5, 8].',
+          'Place key 2 at index 1 -> [1, 2, 4, 5, 8].',
+        ],
+      ),
+    ],
+    complexity: [
+      ComplexityItem(
+        title: 'Best Case',
+        complexity: 'O(n)',
+        note: 'Already sorted input only checks each neighbour once.',
+      ),
+      ComplexityItem(
+        title: 'Average Case',
+        complexity: 'O(n²)',
+        note: 'About half of the sorted prefix shifts for each insertion.',
+      ),
+      ComplexityItem(
+        title: 'Worst Case',
+        complexity: 'O(n²)',
+        note: 'Descending input forces a full shift for every key.',
+      ),
+      ComplexityItem(
+        title: 'Space',
+        complexity: 'O(1)',
+        note: 'Only a single key variable is used for temporary storage.',
+      ),
+    ],
+    pseudoCode: _insertionPseudoCode,
+    implementations: {
+      'C++': _insertionCpp,
+      'Python': _insertionPython,
+      'Java': _insertionJava,
+    },
+  ),
+);
+
 final SortingAlgorithmConfig bubbleSortConfig = SortingAlgorithmConfig(
   id: SortingAlgorithmId.bubble,
   algorithm: BubbleSort(),
@@ -302,10 +427,12 @@ final SortingAlgorithmConfig bubbleSortConfig = SortingAlgorithmConfig(
 final Map<SortingAlgorithmId, SortingAlgorithmConfig> sortingAlgorithmCatalog =
     {
       SortingAlgorithmId.selection: selectionSortConfig,
+      SortingAlgorithmId.insertion: insertionSortConfig,
       SortingAlgorithmId.bubble: bubbleSortConfig,
     };
 
 final List<SortingAlgorithmConfig> sortingAlgorithmList = [
   selectionSortConfig,
+  insertionSortConfig,
   bubbleSortConfig,
 ];

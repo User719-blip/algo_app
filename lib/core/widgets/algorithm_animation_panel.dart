@@ -14,6 +14,7 @@ class AlgorithmAnimationPanel extends StatelessWidget {
   final VoidCallback? onStepBack;
   final VoidCallback? onStepForward;
   final VoidCallback? onReset;
+  final double visualMinHeight;
 
   const AlgorithmAnimationPanel({
     required this.title,
@@ -27,6 +28,7 @@ class AlgorithmAnimationPanel extends StatelessWidget {
     this.onStepBack,
     this.onStepForward,
     this.onReset,
+    this.visualMinHeight = 220,
     super.key,
   });
 
@@ -78,7 +80,31 @@ class AlgorithmAnimationPanel extends StatelessWidget {
         children: [
           Text(title, style: theme.textTheme.titleMedium),
           const SizedBox(height: 12),
-          visual,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final double availableWidth = constraints.maxWidth;
+              double width = availableWidth;
+              if (availableWidth.isFinite) {
+                if (availableWidth > 560) {
+                  width = 560;
+                } else if (availableWidth > 280) {
+                  width = availableWidth;
+                } else {
+                  width = availableWidth;
+                }
+              } else {
+                width = 400;
+              }
+
+              return ConstrainedBox(
+                constraints: BoxConstraints(minHeight: visualMinHeight),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: SizedBox(width: width, child: visual),
+                ),
+              );
+            },
+          ),
           const SizedBox(height: 16),
           Text(
             description,

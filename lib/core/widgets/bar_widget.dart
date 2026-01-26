@@ -5,8 +5,9 @@ import '../theme/app_colors.dart';
 
 class Bar extends StatelessWidget {
   final VisualBar bar;
+  final double width;
 
-  const Bar(this.bar, {super.key});
+  const Bar(this.bar, {super.key, this.width = 34});
 
   Color _resolveColor() {
     switch (bar.state) {
@@ -40,7 +41,7 @@ class Bar extends StatelessWidget {
         AnimatedContainer(
           duration: const Duration(milliseconds: 320),
           curve: Curves.easeOutCubic,
-          width: 34,
+          width: width,
           height: barHeight,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),

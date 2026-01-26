@@ -5,8 +5,9 @@ import '../theme/app_colors.dart';
 
 class SquareTile extends StatelessWidget {
   final VisualTile tile;
+  final double size;
 
-  const SquareTile(this.tile, {super.key});
+  const SquareTile(this.tile, {super.key, this.size = 60});
 
   Color _resolveColor() {
     switch (tile.state) {
@@ -34,8 +35,8 @@ class SquareTile extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 320),
       curve: Curves.easeOutCubic,
-      width: 60,
-      height: 60,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
         gradient: LinearGradient(

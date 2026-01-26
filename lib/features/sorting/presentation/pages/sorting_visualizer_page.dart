@@ -5,20 +5,12 @@ import 'package:algorythm_app/core/models/visual_bar.dart';
 import 'package:algorythm_app/core/models/visual_tile.dart';
 import 'package:algorythm_app/core/theme/app_colors.dart';
 import 'package:algorythm_app/core/utils/step_mapper.dart';
-import 'package:algorythm_app/core/widgets/algorithm_animation_panel.dart';
-import 'package:algorythm_app/core/widgets/bar_section.dart';
-import 'package:algorythm_app/core/widgets/bullet_text.dart';
-import 'package:algorythm_app/core/widgets/code_block.dart';
-import 'package:algorythm_app/core/widgets/playback_controls.dart';
-import 'package:algorythm_app/core/widgets/section_container.dart';
-import 'package:algorythm_app/core/widgets/section_paragraph.dart';
-import 'package:algorythm_app/core/widgets/section_subheading.dart';
-import 'package:algorythm_app/core/widgets/section_title.dart';
-import 'package:algorythm_app/core/widgets/tile_section.dart';
 import 'package:algorythm_app/domain/algorithm_step.dart';
 import 'package:algorythm_app/domain/step_type.dart';
 import 'package:algorythm_app/features/sorting/data/sorting_algorithms.dart';
-import 'package:flutter/foundation.dart';
+import 'package:algorythm_app/features/sorting/presentation/widgets/sorting_concept_section.dart';
+import 'package:algorythm_app/features/sorting/presentation/widgets/sorting_resources_section.dart';
+import 'package:algorythm_app/features/sorting/presentation/widgets/sorting_visualization_section.dart';
 import 'package:flutter/material.dart';
 
 enum _PlaybackChannel { bars, tiles }
@@ -244,14 +236,6 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
     }
   }
 
-  TextStyle _highlightStyle(ThemeData theme) {
-    return theme.textTheme.bodyMedium?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.w600,
-        ) ??
-        const TextStyle(color: Colors.white, fontWeight: FontWeight.w600);
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -336,7 +320,7 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                _buildConceptSection(theme),
+                SortingConceptSection(data: _data),
                 const SizedBox(height: 28),
                 AnimatedBuilder(
                   animation: _barPlayback,
@@ -344,12 +328,26 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
                     final int barIndex = _barPlayback.index;
                     final AlgorithmStep barStep = _steps[barIndex];
                     final List<VisualBar> bars = mapStepToBars(barStep);
-                    return _buildVisualizationSection(
-                      theme,
-                      bars,
-                      barStep,
-                      barIndex,
-                      _barPlayback.playing,
+                    final double barProgress = _progressFor(barIndex);
+                    return SortingVisualizationSection(
+                      bars: bars,
+                      complexity: _data.complexity,
+                      stepLabel: _stepLabel(barStep),
+                      accent: _accentForStep(barStep),
+                      progress: barProgress,
+                      currentIndex: barIndex,
+                      totalSteps: _steps.length,
+                      isPlaying: _barPlayback.playing,
+                      onPlayPause: () => _togglePlayback(_PlaybackChannel.bars),
+                      onStepBack: barIndex == 0
+                          ? null
+                          : () => _stepBackward(_PlaybackChannel.bars),
+                      onStepForward: barIndex >= _steps.length - 1
+                          ? null
+                          : () => _stepForward(_PlaybackChannel.bars),
+                      onReset: barIndex == 0 && !_barPlayback.playing
+                          ? null
+                          : () => _resetPlayback(_PlaybackChannel.bars),
                     );
                   },
                 ),
@@ -368,17 +366,50 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
                         final int tileIndex = _tilePlayback.index;
                         final AlgorithmStep tileStep = _steps[tileIndex];
                         final List<VisualTile> tiles = mapStepToTile(tileStep);
+                        final bool tilePlaying = _tilePlayback.playing;
+                        final double barProgress = _progressFor(barIndex);
+                        final double tileProgress = _progressFor(tileIndex);
 
-                        return _buildResourcesSection(
-                          theme,
-                          bars,
-                          tiles,
-                          barStep,
-                          tileStep,
-                          barIndex,
-                          barPlaying,
-                          tileIndex,
-                          _tilePlayback.playing,
+                        return SortingResourcesSection(
+                          dryRuns: _data.dryRuns,
+                          pseudoCode: _data.pseudoCode,
+                          implementations: _data.implementations,
+                          barVisual: bars,
+                          tileVisual: tiles,
+                          barDescription: _stepLabel(barStep),
+                          tileDescription: _stepLabel(tileStep),
+                          barAccent: _accentForStep(barStep),
+                          tileAccent: _accentForStep(tileStep),
+                          barProgress: barProgress,
+                          tileProgress: tileProgress,
+                          barStepLabel:
+                              'Step ${barIndex + 1} / ${_steps.length}',
+                          tileStepLabel:
+                              'Step ${tileIndex + 1} / ${_steps.length}',
+                          isBarPlaying: barPlaying,
+                          isTilePlaying: tilePlaying,
+                          onBarPlayPause: () =>
+                              _togglePlayback(_PlaybackChannel.bars),
+                          onTilePlayPause: () =>
+                              _togglePlayback(_PlaybackChannel.tiles),
+                          onBarStepBack: barIndex == 0
+                              ? null
+                              : () => _stepBackward(_PlaybackChannel.bars),
+                          onBarStepForward: barIndex >= _steps.length - 1
+                              ? null
+                              : () => _stepForward(_PlaybackChannel.bars),
+                          onTileStepBack: tileIndex == 0
+                              ? null
+                              : () => _stepBackward(_PlaybackChannel.tiles),
+                          onTileStepForward: tileIndex >= _steps.length - 1
+                              ? null
+                              : () => _stepForward(_PlaybackChannel.tiles),
+                          onBarReset: barIndex == 0 && !barPlaying
+                              ? null
+                              : () => _resetPlayback(_PlaybackChannel.bars),
+                          onTileReset: tileIndex == 0 && !tilePlaying
+                              ? null
+                              : () => _resetPlayback(_PlaybackChannel.tiles),
                         );
                       },
                     );
@@ -389,336 +420,6 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildConceptSection(ThemeData theme) {
-    return SectionContainer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SectionTitle(title: '1. Conceptual Explanation'),
-          const SizedBox(height: 16),
-          SectionSubheading('What is ${_data.name}?'),
-          const SizedBox(height: 8),
-          SectionParagraph(_data.conceptSummary),
-          const SizedBox(height: 18),
-          const SectionSubheading('How it works'),
-          const SizedBox(height: 8),
-          ..._data.conceptPoints.map(BulletText.new),
-          const SizedBox(height: 18),
-          const SectionSubheading('When to use it'),
-          const SizedBox(height: 8),
-          SectionParagraph(_data.conceptUsage),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVisualizationSection(
-    ThemeData theme,
-    List<VisualBar> bars,
-    AlgorithmStep barStep,
-    int barIndex,
-    bool isPlaying,
-  ) {
-    final double barProgress = _progressFor(barIndex);
-
-    return SectionContainer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SectionTitle(title: '2. Visualization & Complexity'),
-          const SizedBox(height: 8),
-          SectionParagraph(
-            'Track every comparison and swap while keeping complexity facts within reach.',
-          ),
-          const SizedBox(height: 24),
-          BarSection(bars: bars),
-          const SizedBox(height: 20),
-          Align(
-            alignment: Alignment.center,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: _accentForStep(barStep).withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: _accentForStep(barStep).withValues(alpha: 0.35),
-                ),
-              ),
-              child: Text(
-                _stepLabel(barStep),
-                style: _highlightStyle(theme),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              ControlIconButton(
-                icon: Icons.rotate_left,
-                tooltip: 'Reset to start',
-                onTap: barIndex == 0 && !isPlaying
-                    ? null
-                    : () => _resetPlayback(_PlaybackChannel.bars),
-              ),
-              ControlIconButton(
-                icon: Icons.skip_previous,
-                tooltip: 'Previous step',
-                onTap: barIndex == 0
-                    ? null
-                    : () => _stepBackward(_PlaybackChannel.bars),
-              ),
-              PlayPauseButton(
-                isPlaying: isPlaying,
-                onTap: () => _togglePlayback(_PlaybackChannel.bars),
-              ),
-              ControlIconButton(
-                icon: Icons.skip_next,
-                tooltip: 'Next step',
-                onTap: barIndex >= _steps.length - 1
-                    ? null
-                    : () => _stepForward(_PlaybackChannel.bars),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          SizedBox(
-            height: 6,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: barProgress,
-                backgroundColor: Colors.white.withValues(alpha: 0.08),
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  _accentForStep(barStep),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Step ${barIndex + 1} of ${_steps.length}',
-            style: _highlightStyle(theme),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 28),
-          _buildComplexityGrid(theme),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildComplexityGrid(ThemeData theme) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final bool isWide = constraints.maxWidth > 620;
-        final double tileWidth = isWide
-            ? (constraints.maxWidth - 16) / 2
-            : constraints.maxWidth;
-        return Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: _data.complexity.map((item) {
-            return SizedBox(
-              width: tileWidth,
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.12),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(item.title, style: theme.textTheme.titleMedium),
-                    const SizedBox(height: 8),
-                    Text(
-                      item.complexity,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    SectionParagraph(item.note),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-        );
-      },
-    );
-  }
-
-  Widget _buildResourcesSection(
-    ThemeData theme,
-    List<VisualBar> bars,
-    List<VisualTile> tiles,
-    AlgorithmStep barStep,
-    AlgorithmStep tileStep,
-    int barIndex,
-    bool barPlaying,
-    int tileIndex,
-    bool tilePlaying,
-  ) {
-    final double barProgress = _progressFor(barIndex);
-    final double tileProgress = _progressFor(tileIndex);
-
-    return SectionContainer(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SectionTitle(title: '3. Dry Run, Pseudocode & Implementations'),
-          const SizedBox(height: 16),
-          _buildDryRunCards(theme),
-          const SizedBox(height: 24),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final bool isWide = constraints.maxWidth > 640;
-              final double panelWidth = isWide
-                  ? (constraints.maxWidth - 20) / 2
-                  : constraints.maxWidth;
-              return Wrap(
-                spacing: 20,
-                runSpacing: 20,
-                children: [
-                  SizedBox(
-                    width: panelWidth,
-                    child: AlgorithmAnimationPanel(
-                      title: 'Bar animation',
-                      description: _stepLabel(barStep),
-                      visual: BarSection(bars: bars),
-                      accent: _accentForStep(barStep),
-                      isPlaying: barPlaying,
-                      onPlayPause: () => _togglePlayback(_PlaybackChannel.bars),
-                      onStepBack: barIndex == 0
-                          ? null
-                          : () => _stepBackward(_PlaybackChannel.bars),
-                      onStepForward: barIndex >= _steps.length - 1
-                          ? null
-                          : () => _stepForward(_PlaybackChannel.bars),
-                      onReset: barIndex == 0 && !barPlaying
-                          ? null
-                          : () => _resetPlayback(_PlaybackChannel.bars),
-                      progress: barProgress,
-                      stepLabel: 'Step ${barIndex + 1} / ${_steps.length}',
-                    ),
-                  ),
-                  SizedBox(
-                    width: panelWidth,
-                    child: AlgorithmAnimationPanel(
-                      title: 'Tile animation',
-                      description: _stepLabel(tileStep),
-                      visual: TileSection(tiles: tiles),
-                      accent: _accentForStep(tileStep),
-                      isPlaying: tilePlaying,
-                      onPlayPause: () =>
-                          _togglePlayback(_PlaybackChannel.tiles),
-                      onStepBack: tileIndex == 0
-                          ? null
-                          : () => _stepBackward(_PlaybackChannel.tiles),
-                      onStepForward: tileIndex >= _steps.length - 1
-                          ? null
-                          : () => _stepForward(_PlaybackChannel.tiles),
-                      onReset: tileIndex == 0 && !tilePlaying
-                          ? null
-                          : () => _resetPlayback(_PlaybackChannel.tiles),
-                      progress: tileProgress,
-                      stepLabel: 'Step ${tileIndex + 1} / ${_steps.length}',
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: 28),
-          _buildCodeSection(theme),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDryRunCards(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: _data.dryRuns.map((pass) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(pass.title, style: theme.textTheme.titleMedium),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.sorted.withValues(alpha: 0.16),
-                  borderRadius: BorderRadius.circular(18),
-                ),
-                child: Text(pass.highlight, style: _highlightStyle(theme)),
-              ),
-              const SizedBox(height: 16),
-              ...pass.steps.map(BulletText.new),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildCodeSection(ThemeData theme) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Pseudocode', style: theme.textTheme.titleMedium),
-        const SizedBox(height: 12),
-        CodeBlock(_data.pseudoCode),
-        const SizedBox(height: 20),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final bool isWide = constraints.maxWidth > 640;
-            final double blockWidth = isWide
-                ? (constraints.maxWidth - 20) / 2
-                : constraints.maxWidth;
-            return Wrap(
-              spacing: 20,
-              runSpacing: 20,
-              children: _data.implementations.entries.map((entry) {
-                return SizedBox(
-                  width: blockWidth,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(entry.key, style: theme.textTheme.titleMedium),
-                      const SizedBox(height: 12),
-                      CodeBlock(entry.value),
-                    ],
-                  ),
-                );
-              }).toList(),
-            );
-          },
-        ),
-      ],
     );
   }
 }

@@ -10,11 +10,27 @@ class TileSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      alignment: WrapAlignment.center,
-      spacing: 16,
-      runSpacing: 16,
-      children: tiles.map((visualTile) => SquareTile(visualTile)).toList(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final int count = tiles.length;
+        if (count == 0) {
+          return const SizedBox.shrink();
+        }
+
+        final double maxWidth = constraints.maxWidth;
+        final double spacing = (maxWidth * 0.03).clamp(12, 24);
+        final double rawSize = (maxWidth - spacing * (count - 1)) / count;
+        final double tileSize = rawSize.clamp(48.0, 86.0).toDouble();
+
+        return Wrap(
+          alignment: WrapAlignment.center,
+          spacing: spacing,
+          runSpacing: spacing,
+          children: tiles
+              .map((visualTile) => SquareTile(visualTile, size: tileSize))
+              .toList(),
+        );
+      },
     );
   }
 }
