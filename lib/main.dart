@@ -1,4 +1,4 @@
-import 'package:algorythm_app/features/sorting/presentation/pages/sorting_algorithms_page.dart';
+import 'package:algorythm_app/features/sorting/views/pages/sorting_algorithms_page.dart';
 import 'package:algorythm_app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 

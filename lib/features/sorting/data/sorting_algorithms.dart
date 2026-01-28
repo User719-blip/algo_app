@@ -1,12 +1,13 @@
 import 'package:algorythm_app/algorithms/base_algorithm.dart';
 import 'package:algorythm_app/algorithms/sorting/bubble_sort.dart';
 import 'package:algorythm_app/algorithms/sorting/insertion_sort.dart';
+import 'package:algorythm_app/algorithms/sorting/merge_sort.dart';
 import 'package:algorythm_app/algorithms/sorting/selection_sort.dart';
 import 'package:algorythm_app/core/models/algorithm_page_data.dart';
 import 'package:algorythm_app/core/models/complexity_item.dart';
 import 'package:algorythm_app/core/models/dry_run_pass.dart';
 
-enum SortingAlgorithmId { selection, insertion, bubble }
+enum SortingAlgorithmId { selection, insertion, bubble, merge }
 
 class SortingAlgorithmConfig {
   final SortingAlgorithmId id;
@@ -181,6 +182,134 @@ const String _insertionJava = '''public static void insertionSort(int[] arr) {
     }
     arr[j + 1] = key;
   }
+}
+''';
+
+const String _mergePseudoCode = '''procedure mergeSort(arr):
+  if length(arr) <= 1:
+    return arr
+  mid <- length(arr) / 2
+  left <- mergeSort(arr[0..mid))
+  right <- mergeSort(arr[mid..length(arr)))
+  return merge(left, right)
+
+procedure merge(left, right):
+  result <- empty list
+  while left and right are not empty:
+    if left[0] <= right[0]:
+      append left[0] to result
+      remove left[0] from left
+    else:
+      append right[0] to result
+      remove right[0] from right
+  append remaining elements of left to result
+  append remaining elements of right to result
+  return result
+''';
+
+const String _mergeCpp =
+    '''void merge(std::vector<int>& arr, int left, int mid, int right) {
+  std::vector<int> temp(right - left + 1);
+  int i = left;
+  int j = mid + 1;
+  int k = 0;
+
+  while (i <= mid && j <= right) {
+    if (arr[i] <= arr[j]) {
+      temp[k++] = arr[i++];
+    } else {
+      temp[k++] = arr[j++];
+    }
+  }
+
+  while (i <= mid) {
+    temp[k++] = arr[i++];
+  }
+
+  while (j <= right) {
+    temp[k++] = arr[j++];
+  }
+
+  for (int idx = 0; idx < static_cast<int>(temp.size()); ++idx) {
+    arr[left + idx] = temp[idx];
+  }
+}
+
+void mergeSort(std::vector<int>& arr, int left, int right) {
+  if (left >= right) {
+    return;
+  }
+  int mid = left + (right - left) / 2;
+  mergeSort(arr, left, mid);
+  mergeSort(arr, mid + 1, right);
+  merge(arr, left, mid, right);
+}
+''';
+
+const String _mergePython = '''def merge_sort(values):
+  arr = values[:]
+
+  def merge(left, right):
+    merged = []
+    i = j = 0
+    while i < len(left) and j < len(right):
+      if left[i] <= right[j]:
+        merged.append(left[i])
+        i += 1
+      else:
+        merged.append(right[j])
+        j += 1
+    merged.extend(left[i:])
+    merged.extend(right[j:])
+    return merged
+
+  def sort(segment):
+    if len(segment) <= 1:
+      return segment
+    mid = len(segment) // 2
+    left = sort(segment[:mid])
+    right = sort(segment[mid:])
+    return merge(left, right)
+
+  return sort(arr)
+''';
+
+const String _mergeJava =
+    '''private static void merge(int[] arr, int left, int mid, int right) {
+  int[] temp = new int[right - left + 1];
+  int i = left;
+  int j = mid + 1;
+  int k = 0;
+
+  while (i <= mid && j <= right) {
+    if (arr[i] <= arr[j]) {
+      temp[k++] = arr[i++];
+    } else {
+      temp[k++] = arr[j++];
+    }
+  }
+
+  while (i <= mid) {
+    temp[k++] = arr[i++];
+  }
+
+  while (j <= right) {
+    temp[k++] = arr[j++];
+  }
+
+  for (int idx = 0; idx < temp.length; idx++) {
+    arr[left + idx] = temp[idx];
+  }
+}
+
+public static void mergeSort(int[] arr, int left, int right) {
+  if (left >= right) {
+    return;
+  }
+  int mid = left + (right - left) / 2;
+  mergeSort(arr, left, mid);
+  mergeSort(arr, mid + 1, right);
+  merge(arr, left, mid, right);
 }
 ''';
 
@@ -424,15 +553,100 @@ final SortingAlgorithmConfig bubbleSortConfig = SortingAlgorithmConfig(
   ),
 );
 
+final SortingAlgorithmConfig mergeSortConfig = SortingAlgorithmConfig(
+  id: SortingAlgorithmId.merge,
+  algorithm: MergeSort(),
+  data: AlgorithmPageData(
+    name: 'Merge Sort',
+    tagline:
+        'Divide, conquer, and stitch halves together in linearithmic time.',
+    conceptSummary:
+        'Merge Sort recursively splits the list into halves, sorts each half, then merges the sorted runs back together to produce a fully ordered array.',
+    conceptPoints: [
+      'Recursively split the array until only single-element runs remain.',
+      'Merge sibling runs by comparing the next value from each half.',
+      'Copy the smaller front value into the merged output and advance that half.',
+      'Append whatever remains when one half is exhausted to finish the run.',
+    ],
+    conceptUsage:
+        'Choose Merge Sort for reliable O(n log n) performance, stable ordering, and workloads that benefit from streaming or external memory merges.',
+    dryRuns: [
+      DryRunPass(
+        title: 'Divide phase',
+        highlight:
+            'Recursively split [5, 1, 4, 2, 8] into single-element runs.',
+        steps: [
+          'Split into [5, 1, 4] and [2, 8].',
+          'Split [5, 1, 4] into [5, 1] and [4].',
+          'Split [5, 1] into [5] and [1].',
+          'Base case reached: each sub-array now contains one value.',
+        ],
+      ),
+      DryRunPass(
+        title: 'Merge size 2 runs',
+        highlight:
+            'Build sorted pairs while stepping back up the recursion tree.',
+        steps: [
+          'Merge [5] and [1] -> [1, 5].',
+          'Merge [2] and [8] -> [2, 8].',
+          'Current runs: [1, 5], [4], [2, 8].',
+        ],
+      ),
+      DryRunPass(
+        title: 'Merge the final runs',
+        highlight: 'Combine [1, 4, 5] with [2, 8] to finish the sort.',
+        steps: [
+          'Merge [1, 5] with [4] -> [1, 4, 5].',
+          'Merge [1, 4, 5] with [2, 8] -> [1, 2, 4, 5, 8].',
+          'All elements are now in ascending order.',
+        ],
+      ),
+    ],
+    complexity: [
+      ComplexityItem(
+        title: 'Best Case',
+        complexity: 'O(n log n)',
+        note:
+            'Even sorted input still requires merging each level of the tree.',
+      ),
+      ComplexityItem(
+        title: 'Average Case',
+        complexity: 'O(n log n)',
+        note:
+            'Balanced splitting and merging keeps work proportional to n log n.',
+      ),
+      ComplexityItem(
+        title: 'Worst Case',
+        complexity: 'O(n log n)',
+        note:
+            'Every element participates in each level of merging regardless of order.',
+      ),
+      ComplexityItem(
+        title: 'Space',
+        complexity: 'O(n)',
+        note: 'Temporary buffers store merged runs before copying back.',
+      ),
+    ],
+    pseudoCode: _mergePseudoCode,
+    implementations: {
+      'C++': _mergeCpp,
+      'Python': _mergePython,
+      'Java': _mergeJava,
+    },
+  ),
+);
+
 final Map<SortingAlgorithmId, SortingAlgorithmConfig> sortingAlgorithmCatalog =
     {
       SortingAlgorithmId.selection: selectionSortConfig,
       SortingAlgorithmId.insertion: insertionSortConfig,
       SortingAlgorithmId.bubble: bubbleSortConfig,
+      SortingAlgorithmId.merge: mergeSortConfig,
     };
 
 final List<SortingAlgorithmConfig> sortingAlgorithmList = [
   selectionSortConfig,
   insertionSortConfig,
   bubbleSortConfig,
+  mergeSortConfig,
 ];

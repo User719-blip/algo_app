@@ -5,7 +5,7 @@ import 'package:algorythm_app/core/widgets/section_paragraph.dart';
 import 'package:algorythm_app/core/widgets/section_subheading.dart';
 import 'package:algorythm_app/core/widgets/section_title.dart';
 import 'package:algorythm_app/features/sorting/data/sorting_algorithms.dart';
-import 'package:algorythm_app/features/sorting/presentation/pages/sorting_visualizer_page.dart';
+import 'package:algorythm_app/features/sorting/views/pages/sorting_visualizer_page.dart';
 import 'package:flutter/material.dart';
 
 class SortingAlgorithmsPage extends StatelessWidget {
