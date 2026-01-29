@@ -1,6 +1,5 @@
 import 'package:algorythm_app/core/models/complexity_item.dart';
 import 'package:algorythm_app/core/models/visual_bar.dart';
-import 'package:algorythm_app/core/theme/app_colors.dart';
 import 'package:algorythm_app/core/widgets/bar_section.dart';
 import 'package:algorythm_app/core/widgets/playback_controls.dart';
 import 'package:algorythm_app/core/widgets/section_container.dart';

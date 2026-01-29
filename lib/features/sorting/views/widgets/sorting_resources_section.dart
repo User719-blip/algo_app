@@ -7,7 +7,6 @@ import 'package:algorythm_app/core/widgets/bar_section.dart';
 import 'package:algorythm_app/core/widgets/bullet_text.dart';
 import 'package:algorythm_app/core/widgets/code_block.dart';
 import 'package:algorythm_app/core/widgets/section_container.dart';
-import 'package:algorythm_app/core/widgets/section_paragraph.dart';
 import 'package:algorythm_app/core/widgets/section_title.dart';
 import 'package:algorythm_app/core/widgets/tile_section.dart';
 import 'package:flutter/material.dart';
