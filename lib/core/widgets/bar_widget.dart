@@ -53,8 +53,8 @@ class Bar extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: baseColor.withValues(alpha: 0.42),
-                blurRadius: 16,
-                offset: const Offset(0, 12),
+                blurRadius: 4,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
