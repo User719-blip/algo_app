@@ -9,6 +9,7 @@ import 'package:algorythm_app/domain/step_type.dart';
 import 'package:algorythm_app/features/sorting/data/sorting_algorithms.dart';
 import 'package:algorythm_app/features/sorting/models/sorting_playback_state.dart';
 import 'package:algorythm_app/features/sorting/models/sorting_visualizer_state.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 enum SortingPlaybackChannel { bars, tiles }
@@ -22,6 +23,22 @@ class SortingVisualizerController extends ChangeNotifier {
   }
 
   final Duration _playbackInterval;
+  final ValueNotifier<List<VisualBar>> barVisualNotifier =
+      ValueNotifier<List<VisualBar>>(const []);
+  final ValueNotifier<List<VisualTile>> tileVisualNotifier =
+      ValueNotifier<List<VisualTile>>(const []);
+  final ValueNotifier<double> barProgressNotifier = ValueNotifier<double>(0);
+  final ValueNotifier<double> tileProgressNotifier = ValueNotifier<double>(0);
+  final ValueNotifier<String> barStepLabelNotifier = ValueNotifier<String>(
+    'Step 0 / 0',
+  );
+  final ValueNotifier<String> tileStepLabelNotifier = ValueNotifier<String>(
+    'Step 0 / 0',
+  );
+  final ValueNotifier<SortingPlaybackState> barPlaybackNotifier =
+      ValueNotifier<SortingPlaybackState>(const SortingPlaybackState());
+  final ValueNotifier<SortingPlaybackState> tilePlaybackNotifier =
+      ValueNotifier<SortingPlaybackState>(const SortingPlaybackState());
 
   SortingVisualizerState? _state;
   Timer? _barTimer;
@@ -134,6 +151,18 @@ class SortingVisualizerController extends ChangeNotifier {
 
   bool get isInitialized => _state != null;
 
+  ValueListenable<List<VisualBar>> get barVisualListenable => barVisualNotifier;
+  ValueListenable<List<VisualTile>> get tileVisualListenable =>
+      tileVisualNotifier;
+  ValueListenable<double> get barProgressListenable => barProgressNotifier;
+  ValueListenable<double> get tileProgressListenable => tileProgressNotifier;
+  ValueListenable<String> get barStepLabelListenable => barStepLabelNotifier;
+  ValueListenable<String> get tileStepLabelListenable => tileStepLabelNotifier;
+  ValueListenable<SortingPlaybackState> get barPlaybackListenable =>
+      barPlaybackNotifier;
+  ValueListenable<SortingPlaybackState> get tilePlaybackListenable =>
+      tilePlaybackNotifier;
+
   @override
   void dispose() {
     _cancelTimer(SortingPlaybackChannel.bars);
@@ -150,6 +179,21 @@ class SortingVisualizerController extends ChangeNotifier {
       steps: steps,
       barPlayback: const SortingPlaybackState(),
       tilePlayback: const SortingPlaybackState(),
+    );
+    barPlaybackNotifier.value = state.barPlayback;
+    tilePlaybackNotifier.value = state.tilePlayback;
+    final firstStep = steps.first;
+    _publishFrame(
+      SortingPlaybackChannel.bars,
+      state.barPlayback,
+      step: firstStep,
+      notify: false,
+    );
+    _publishFrame(
+      SortingPlaybackChannel.tiles,
+      state.tilePlayback,
+      step: firstStep,
+      notify: false,
     );
     if (notify) {
       notifyListeners();
@@ -177,6 +221,7 @@ class SortingVisualizerController extends ChangeNotifier {
     }
 
     final playback = _playbackFor(channel);
+
     if (playback.index >= _steps.length - 1) {
       _cancelTimer(channel);
       _updatePlayback(channel, playback.copyWith(playing: false));
@@ -209,10 +254,12 @@ class SortingVisualizerController extends ChangeNotifier {
     final currentState = state;
     if (channel == SortingPlaybackChannel.bars) {
       _state = currentState.copyWith(barPlayback: value);
+      barPlaybackNotifier.value = value;
     } else {
       _state = currentState.copyWith(tilePlayback: value);
+      tilePlaybackNotifier.value = value;
     }
-    notifyListeners();
+    _publishFrame(channel, value, step: _steps[value.index]);
   }
 
   double _progressFor(int index) {
@@ -220,5 +267,27 @@ class SortingVisualizerController extends ChangeNotifier {
       return 0;
     }
     return index / (_steps.length - 1);
+  }
+
+  void _publishFrame(
+    SortingPlaybackChannel channel,
+    SortingPlaybackState playback, {
+    required AlgorithmStep step,
+    bool notify = true,
+  }) {
+    if (channel == SortingPlaybackChannel.bars) {
+      barVisualNotifier.value = mapStepToBars(step);
+      barProgressNotifier.value = _progressFor(playback.index);
+      barStepLabelNotifier.value =
+          'Step ${playback.index + 1} / ${_steps.length}';
+    } else {
+      tileVisualNotifier.value = mapStepToTile(step);
+      tileProgressNotifier.value = _progressFor(playback.index);
+      tileStepLabelNotifier.value =
+          'Step ${playback.index + 1} / ${_steps.length}';
+    }
+    if (notify) {
+      notifyListeners();
+    }
   }
 }

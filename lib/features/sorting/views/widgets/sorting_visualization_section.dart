@@ -1,22 +1,21 @@
 import 'package:algorythm_app/core/models/complexity_item.dart';
 import 'package:algorythm_app/core/models/visual_bar.dart';
-import 'package:algorythm_app/core/theme/app_colors.dart';
 import 'package:algorythm_app/core/widgets/bar_section.dart';
 import 'package:algorythm_app/core/widgets/playback_controls.dart';
 import 'package:algorythm_app/core/widgets/section_container.dart';
 import 'package:algorythm_app/core/widgets/section_paragraph.dart';
 import 'package:algorythm_app/core/widgets/section_title.dart';
+import 'package:algorythm_app/features/sorting/models/sorting_playback_state.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class SortingVisualizationSection extends StatelessWidget {
-  final List<VisualBar> bars;
+  final ValueListenable<List<VisualBar>> bars;
+  final ValueListenable<String> stepLabel;
+  final ValueListenable<double> progress;
+  final ValueListenable<SortingPlaybackState> playback;
   final List<ComplexityItem> complexity;
-  final String stepLabel;
   final Color accent;
-  final double progress;
-  final int currentIndex;
-  final int totalSteps;
-  final bool isPlaying;
   final VoidCallback onPlayPause;
   final VoidCallback? onStepBack;
   final VoidCallback? onStepForward;
@@ -25,13 +24,11 @@ class SortingVisualizationSection extends StatelessWidget {
   const SortingVisualizationSection({
     super.key,
     required this.bars,
-    required this.complexity,
     required this.stepLabel,
-    required this.accent,
     required this.progress,
-    required this.currentIndex,
-    required this.totalSteps,
-    required this.isPlaying,
+    required this.playback,
+    required this.complexity,
+    required this.accent,
     required this.onPlayPause,
     this.onStepBack,
     this.onStepForward,
@@ -59,7 +56,10 @@ class SortingVisualizationSection extends StatelessWidget {
             'Track every comparison and swap while keeping complexity facts within reach.',
           ),
           const SizedBox(height: 24),
-          BarSection(bars: bars),
+          ValueListenableBuilder<List<VisualBar>>(
+            valueListenable: bars,
+            builder: (_, frames, __) => BarSection(bars: frames),
+          ),
           const SizedBox(height: 20),
           Align(
             alignment: Alignment.center,
@@ -70,54 +70,77 @@ class SortingVisualizationSection extends StatelessWidget {
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: accent.withValues(alpha: 0.35)),
               ),
-              child: Text(
-                stepLabel,
-                style: _highlightStyle(theme),
-                textAlign: TextAlign.center,
+              child: ValueListenableBuilder<String>(
+                valueListenable: stepLabel,
+                builder: (_, label, __) => Text(
+                  label,
+                  style: _highlightStyle(theme),
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
           ),
           const SizedBox(height: 20),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 12,
-            runSpacing: 12,
-            children: [
-              ControlIconButton(
-                icon: Icons.rotate_left,
-                tooltip: 'Reset to start',
-                onTap: onReset,
-              ),
-              ControlIconButton(
-                icon: Icons.skip_previous,
-                tooltip: 'Previous step',
-                onTap: onStepBack,
-              ),
-              PlayPauseButton(isPlaying: isPlaying, onTap: onPlayPause),
-              ControlIconButton(
-                icon: Icons.skip_next,
-                tooltip: 'Next step',
-                onTap: onStepForward,
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final spacing = constraints.maxWidth < 360 ? 8.0 : 12.0;
+              final isNarrow = constraints.maxWidth < 380;
+
+              final toolbar = Wrap(
+                alignment: WrapAlignment.center,
+                spacing: spacing,
+                runSpacing: spacing,
+                children: [
+                  ControlIconButton(
+                    icon: Icons.rotate_left,
+                    tooltip: 'Reset to start',
+                    onTap: onReset,
+                  ),
+                  ControlIconButton(
+                    icon: Icons.skip_previous,
+                    tooltip: 'Previous step',
+                    onTap: onStepBack,
+                  ),
+                  ValueListenableBuilder<SortingPlaybackState>(
+                    valueListenable: playback,
+                    builder: (_, state, __) => PlayPauseButton(
+                      isPlaying: state.playing,
+                      onTap: onPlayPause,
+                    ),
+                  ),
+                  ControlIconButton(
+                    icon: Icons.skip_next,
+                    tooltip: 'Next step',
+                    onTap: onStepForward,
+                  ),
+                ],
+              );
+
+              return isNarrow
+                  ? SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: toolbar,
+                    )
+                  : toolbar;
+            },
           ),
           const SizedBox(height: 18),
-          SizedBox(
-            height: 6,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: progress,
-                backgroundColor: Colors.white.withValues(alpha: 0.08),
-                valueColor: AlwaysStoppedAnimation<Color>(accent),
-              ),
+          ValueListenableBuilder<double>(
+            valueListenable: progress,
+            builder: (_, value, __) => LinearProgressIndicator(
+              value: value,
+              backgroundColor: Colors.white.withValues(alpha: 0.08),
+              valueColor: AlwaysStoppedAnimation<Color>(accent),
             ),
           ),
           const SizedBox(height: 10),
-          Text(
-            'Step ${currentIndex + 1} of $totalSteps',
-            style: _highlightStyle(theme),
-            textAlign: TextAlign.center,
+          ValueListenableBuilder<String>(
+            valueListenable: stepLabel,
+            builder: (_, label, __) => Text(
+              label,
+              style: _highlightStyle(theme),
+              textAlign: TextAlign.center,
+            ),
           ),
           const SizedBox(height: 28),
           _ComplexityGrid(complexity: complexity),

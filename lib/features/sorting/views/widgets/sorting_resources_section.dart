@@ -7,27 +7,28 @@ import 'package:algorythm_app/core/widgets/bar_section.dart';
 import 'package:algorythm_app/core/widgets/bullet_text.dart';
 import 'package:algorythm_app/core/widgets/code_block.dart';
 import 'package:algorythm_app/core/widgets/section_container.dart';
-import 'package:algorythm_app/core/widgets/section_paragraph.dart';
 import 'package:algorythm_app/core/widgets/section_title.dart';
 import 'package:algorythm_app/core/widgets/tile_section.dart';
+import 'package:algorythm_app/features/sorting/models/sorting_playback_state.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class SortingResourcesSection extends StatelessWidget {
   final List<DryRunPass> dryRuns;
+  final ValueListenable<List<VisualBar>> barVisualListenable;
+  final ValueListenable<List<VisualTile>> tileVisualListenable;
+  final ValueListenable<double> barProgressListenable;
+  final ValueListenable<double> tileProgressListenable;
+  final ValueListenable<String> barStepLabelListenable;
+  final ValueListenable<String> tileStepLabelListenable;
+  final ValueListenable<SortingPlaybackState> barPlaybackListenable;
+  final ValueListenable<SortingPlaybackState> tilePlaybackListenable;
   final String pseudoCode;
   final Map<String, String> implementations;
-  final List<VisualBar> barVisual;
-  final List<VisualTile> tileVisual;
   final String barDescription;
   final String tileDescription;
   final Color barAccent;
   final Color tileAccent;
-  final double barProgress;
-  final double tileProgress;
-  final String barStepLabel;
-  final String tileStepLabel;
-  final bool isBarPlaying;
-  final bool isTilePlaying;
   final VoidCallback onBarPlayPause;
   final VoidCallback onTilePlayPause;
   final VoidCallback? onBarStepBack;
@@ -42,18 +43,10 @@ class SortingResourcesSection extends StatelessWidget {
     required this.dryRuns,
     required this.pseudoCode,
     required this.implementations,
-    required this.barVisual,
-    required this.tileVisual,
     required this.barDescription,
     required this.tileDescription,
     required this.barAccent,
     required this.tileAccent,
-    required this.barProgress,
-    required this.tileProgress,
-    required this.barStepLabel,
-    required this.tileStepLabel,
-    required this.isBarPlaying,
-    required this.isTilePlaying,
     required this.onBarPlayPause,
     required this.onTilePlayPause,
     this.onBarStepBack,
@@ -62,6 +55,14 @@ class SortingResourcesSection extends StatelessWidget {
     this.onTileStepForward,
     this.onBarReset,
     this.onTileReset,
+    required this.barVisualListenable,
+    required this.tileVisualListenable,
+    required this.barProgressListenable,
+    required this.tileProgressListenable,
+    required this.barStepLabelListenable,
+    required this.tileStepLabelListenable,
+    required this.barPlaybackListenable,
+    required this.tilePlaybackListenable,
   });
 
   TextStyle _highlightStyle(ThemeData theme) {
@@ -95,34 +96,36 @@ class SortingResourcesSection extends StatelessWidget {
                 children: [
                   SizedBox(
                     width: panelWidth,
-                    child: AlgorithmAnimationPanel(
+                    child: _AnimationPanelBuilder<VisualBar>(
                       title: 'Bar animation',
                       description: barDescription,
-                      visual: BarSection(bars: barVisual),
                       accent: barAccent,
-                      isPlaying: isBarPlaying,
+                      visualListenable: barVisualListenable,
+                      progressListenable: barProgressListenable,
+                      stepLabelListenable: barStepLabelListenable,
+                      playbackListenable: barPlaybackListenable,
                       onPlayPause: onBarPlayPause,
                       onStepBack: onBarStepBack,
                       onStepForward: onBarStepForward,
                       onReset: onBarReset,
-                      progress: barProgress,
-                      stepLabel: barStepLabel,
+                      builder: (values) => BarSection(bars: values),
                     ),
                   ),
                   SizedBox(
                     width: panelWidth,
-                    child: AlgorithmAnimationPanel(
+                    child: _AnimationPanelBuilder<VisualTile>(
                       title: 'Tile animation',
                       description: tileDescription,
-                      visual: TileSection(tiles: tileVisual),
                       accent: tileAccent,
-                      isPlaying: isTilePlaying,
+                      visualListenable: tileVisualListenable,
+                      progressListenable: tileProgressListenable,
+                      stepLabelListenable: tileStepLabelListenable,
+                      playbackListenable: tilePlaybackListenable,
                       onPlayPause: onTilePlayPause,
                       onStepBack: onTileStepBack,
                       onStepForward: onTileStepForward,
                       onReset: onTileReset,
-                      progress: tileProgress,
-                      stepLabel: tileStepLabel,
+                      builder: (values) => TileSection(tiles: values),
                     ),
                   ),
                 ],
@@ -182,6 +185,73 @@ class _DryRunList extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+class _AnimationPanelBuilder<T> extends StatelessWidget {
+  final String title;
+  final String description;
+  final Color accent;
+  final ValueListenable<List<T>> visualListenable;
+  final ValueListenable<double> progressListenable;
+  final ValueListenable<String> stepLabelListenable;
+  final ValueListenable<SortingPlaybackState> playbackListenable;
+  final VoidCallback onPlayPause;
+  final VoidCallback? onStepBack;
+  final VoidCallback? onStepForward;
+  final VoidCallback? onReset;
+  final Widget Function(List<T> values) builder;
+
+  const _AnimationPanelBuilder({
+    required this.title,
+    required this.description,
+    required this.accent,
+    required this.visualListenable,
+    required this.progressListenable,
+    required this.stepLabelListenable,
+    required this.playbackListenable,
+    required this.onPlayPause,
+    this.onStepBack,
+    this.onStepForward,
+    this.onReset,
+    required this.builder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<List<T>>(
+      valueListenable: visualListenable,
+      builder: (context, visuals, _) {
+        return ValueListenableBuilder<SortingPlaybackState>(
+          valueListenable: playbackListenable,
+          builder: (context, playback, __) {
+            return ValueListenableBuilder<double>(
+              valueListenable: progressListenable,
+              builder: (context, progress, ___) {
+                return ValueListenableBuilder<String>(
+                  valueListenable: stepLabelListenable,
+                  builder: (context, stepLabel, ____) {
+                    return AlgorithmAnimationPanel(
+                      title: title,
+                      description: description,
+                      visual: builder(visuals),
+                      accent: accent,
+                      isPlaying: playback.playing,
+                      onPlayPause: onPlayPause,
+                      onStepBack: onStepBack,
+                      onStepForward: onStepForward,
+                      onReset: onReset,
+                      progress: progress,
+                      stepLabel: stepLabel,
+                    );
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
     );
   }
 }

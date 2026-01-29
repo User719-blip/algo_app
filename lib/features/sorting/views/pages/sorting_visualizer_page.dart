@@ -1,5 +1,3 @@
-import 'package:algorythm_app/core/models/visual_bar.dart';
-import 'package:algorythm_app/core/models/visual_tile.dart';
 import 'package:algorythm_app/core/theme/app_colors.dart';
 import 'package:algorythm_app/features/sorting/controllers/sorting_visualizer_controller.dart';
 import 'package:algorythm_app/features/sorting/data/sorting_algorithms.dart';
@@ -54,9 +52,6 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
 
     final SortingVisualizerState state = _controller.state;
     final theme = Theme.of(context);
-
-    final List<VisualBar> barVisual = _controller.barVisual;
-    final List<VisualTile> tileVisual = _controller.tileVisual;
 
     final barStep = _controller.barStep;
     final tileStep = _controller.tileStep;
@@ -153,14 +148,11 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
                 SortingConceptSection(data: state.data),
                 const SizedBox(height: 28),
                 SortingVisualizationSection(
-                  bars: barVisual,
+                  bars: _controller.barVisualListenable,
                   complexity: state.data.complexity,
-                  stepLabel: barDescription,
+                  stepLabel: _controller.barStepLabelListenable,
                   accent: barAccent,
-                  progress: _controller.barProgress,
-                  currentIndex: barPlayback.index,
-                  totalSteps: state.steps.length,
-                  isPlaying: barPlayback.playing,
+                  progress: _controller.barProgressListenable,
                   onPlayPause: () =>
                       _controller.togglePlayback(SortingPlaybackChannel.bars),
                   onStepBack: barPlayback.index == 0
@@ -178,24 +170,25 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
                       : () => _controller.resetPlayback(
                           SortingPlaybackChannel.bars,
                         ),
+                  playback: _controller.barPlaybackListenable,
                 ),
                 const SizedBox(height: 28),
                 SortingResourcesSection(
                   dryRuns: state.data.dryRuns,
                   pseudoCode: state.data.pseudoCode,
                   implementations: state.data.implementations,
-                  barVisual: barVisual,
-                  tileVisual: tileVisual,
+                  barVisualListenable: _controller.barVisualListenable,
+                  tileVisualListenable: _controller.tileVisualListenable,
+                  barProgressListenable: _controller.barProgressListenable,
+                  tileProgressListenable: _controller.tileProgressListenable,
+                  barStepLabelListenable: _controller.barStepLabelListenable,
+                  tileStepLabelListenable: _controller.tileStepLabelListenable,
+                  barPlaybackListenable: _controller.barPlaybackListenable,
+                  tilePlaybackListenable: _controller.tilePlaybackListenable,
                   barDescription: barDescription,
                   tileDescription: tileDescription,
                   barAccent: barAccent,
                   tileAccent: tileAccent,
-                  barProgress: _controller.barProgress,
-                  tileProgress: _controller.tileProgress,
-                  barStepLabel: _controller.barStepLabel,
-                  tileStepLabel: _controller.tileStepLabel,
-                  isBarPlaying: barPlayback.playing,
-                  isTilePlaying: tilePlayback.playing,
                   onBarPlayPause: () =>
                       _controller.togglePlayback(SortingPlaybackChannel.bars),
                   onTilePlayPause: () =>
