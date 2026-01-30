@@ -5,4 +5,4 @@ class VisualTile {
   VisualTile(this.value, this.state);
 }
 
-enum TileState { normal, comparing, swapping, sorted }
+enum TileState { normal, comparing, swapping, sorted, invariant }

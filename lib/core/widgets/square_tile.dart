@@ -17,6 +17,8 @@ class SquareTile extends StatelessWidget {
         return AppColors.swapTile;
       case TileState.sorted:
         return AppColors.sorted;
+      case TileState.invariant:
+        return AppColors.invariantTile;
       case TileState.normal:
         return AppColors.neutralTile;
     }

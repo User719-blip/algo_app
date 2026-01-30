@@ -34,6 +34,12 @@ class InsertionSort implements Algorithm {
 
       while (j >= 0 && arr[j] > key) {
         compared = true;
+        final labels = <int, String>{i: 'Key value', j: 'Compare left'};
+        if (j + 1 == i) {
+          labels[i] = 'Key value (shift target)';
+        } else {
+          labels[j + 1] = 'Shift target';
+        }
         steps.add(
           AlgorithmStep(
             values: List<int>.from(arr),
@@ -41,10 +47,12 @@ class InsertionSort implements Algorithm {
             indexA: j,
             indexB: j + 1,
             sortedIndices: sortedIndices,
+            invariantLabels: labels,
           ),
         );
 
         arr[j + 1] = arr[j];
+        labels[j] = 'Shifted left';
         steps.add(
           AlgorithmStep(
             values: List<int>.from(arr),
@@ -52,12 +60,19 @@ class InsertionSort implements Algorithm {
             indexA: j,
             indexB: j + 1,
             sortedIndices: sortedIndices,
+            invariantLabels: labels,
           ),
         );
         j--;
       }
 
       if (!compared && j >= 0) {
+        final labels = <int, String>{i: 'Key value', j: 'Sorted left'};
+        if (j + 1 == i) {
+          labels[i] = 'Key value (already aligned)';
+        } else {
+          labels[j + 1] = 'Insertion point';
+        }
         steps.add(
           AlgorithmStep(
             values: List<int>.from(arr),
@@ -65,11 +80,18 @@ class InsertionSort implements Algorithm {
             indexA: j,
             indexB: j + 1,
             sortedIndices: sortedIndices,
+            invariantLabels: labels,
           ),
         );
       }
 
       arr[j + 1] = key;
+      final labels = <int, String>{
+        i: j + 1 == i ? 'Key value (stays put)' : 'Key value',
+      };
+      if (j + 1 != i) {
+        labels[j + 1] = 'Insert here';
+      }
       steps.add(
         AlgorithmStep(
           values: List<int>.from(arr),
@@ -77,6 +99,7 @@ class InsertionSort implements Algorithm {
           indexA: j + 1,
           indexB: i,
           sortedIndices: sortedIndices,
+          invariantLabels: labels,
         ),
       );
 

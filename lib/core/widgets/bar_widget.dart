@@ -17,6 +17,8 @@ class Bar extends StatelessWidget {
         return AppColors.swap;
       case BarState.sorted:
         return AppColors.sorted;
+      case BarState.invariant:
+        return AppColors.invariant;
       case BarState.normal:
         return AppColors.neutral;
     }

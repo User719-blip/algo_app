@@ -17,6 +17,13 @@ class SelectionSort implements Algorithm {
       int minIndex = i;
 
       for (int j = i + 1; j < arr.length; j++) {
+        final labels = <int, String>{i: 'Sorted boundary'};
+        if (minIndex != i) {
+          labels[minIndex] = 'Min candidate';
+        }
+        if (j != i && j != minIndex) {
+          labels[j] = 'Scanning';
+        }
         steps.add(
           AlgorithmStep(
             values: List<int>.from(arr),
@@ -24,6 +31,7 @@ class SelectionSort implements Algorithm {
             indexB: j,
             type: StepType.compare,
             sortedIndices: sortedIndices,
+            invariantLabels: labels,
           ),
         );
 
@@ -33,6 +41,10 @@ class SelectionSort implements Algorithm {
       }
 
       if (minIndex != i) {
+        final labels = <int, String>{
+          i: 'Sorted boundary',
+          minIndex: 'Min candidate',
+        };
         final temp = arr[i];
         arr[i] = arr[minIndex];
         arr[minIndex] = temp;
@@ -43,6 +55,7 @@ class SelectionSort implements Algorithm {
             indexB: minIndex,
             type: StepType.swap,
             sortedIndices: sortedIndices,
+            invariantLabels: labels,
           ),
         );
       }

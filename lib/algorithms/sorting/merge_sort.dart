@@ -24,6 +24,11 @@ class MergeSort implements Algorithm {
       while (i < left.length && j < right.length) {
         final leftIndex = low + i;
         final rightIndex = mid + 1 + j;
+        final compareLabels = <int, String>{
+          leftIndex: 'Left pointer',
+          rightIndex: 'Right pointer',
+          k: 'Merge slot',
+        };
 
         steps.add(
           AlgorithmStep(
@@ -32,11 +37,16 @@ class MergeSort implements Algorithm {
             indexB: rightIndex,
             type: StepType.compare,
             sortedIndices: sortedIndices,
+            invariantLabels: compareLabels,
           ),
         );
 
         if (left[i] <= right[j]) {
           arr[k] = left[i];
+          final labels = <int, String>{
+            leftIndex: 'Left pointer',
+            k: 'Merged from left',
+          };
           steps.add(
             AlgorithmStep(
               values: List<int>.from(arr),
@@ -44,11 +54,16 @@ class MergeSort implements Algorithm {
               indexB: leftIndex,
               type: StepType.swap,
               sortedIndices: sortedIndices,
+              invariantLabels: labels,
             ),
           );
           i++;
         } else {
           arr[k] = right[j];
+          final labels = <int, String>{
+            rightIndex: 'Right pointer',
+            k: 'Merged from right',
+          };
           steps.add(
             AlgorithmStep(
               values: List<int>.from(arr),
@@ -56,6 +71,7 @@ class MergeSort implements Algorithm {
               indexB: rightIndex,
               type: StepType.swap,
               sortedIndices: sortedIndices,
+              invariantLabels: labels,
             ),
           );
           j++;
@@ -66,6 +82,10 @@ class MergeSort implements Algorithm {
       while (i < left.length) {
         final sourceIndex = low + i;
         arr[k] = left[i];
+        final labels = <int, String>{
+          sourceIndex: 'Left remainder',
+          k: 'Merged from left',
+        };
         steps.add(
           AlgorithmStep(
             values: List<int>.from(arr),
@@ -73,6 +93,7 @@ class MergeSort implements Algorithm {
             indexB: sourceIndex,
             type: StepType.swap,
             sortedIndices: sortedIndices,
+            invariantLabels: labels,
           ),
         );
         i++;
@@ -82,6 +103,10 @@ class MergeSort implements Algorithm {
       while (j < right.length) {
         final sourceIndex = mid + 1 + j;
         arr[k] = right[j];
+        final labels = <int, String>{
+          sourceIndex: 'Right remainder',
+          k: 'Merged from right',
+        };
         steps.add(
           AlgorithmStep(
             values: List<int>.from(arr),
@@ -89,6 +114,7 @@ class MergeSort implements Algorithm {
             indexB: sourceIndex,
             type: StepType.swap,
             sortedIndices: sortedIndices,
+            invariantLabels: labels,
           ),
         );
         j++;

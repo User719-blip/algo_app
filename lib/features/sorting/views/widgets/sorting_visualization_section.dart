@@ -14,9 +14,12 @@ class SortingVisualizationSection extends StatelessWidget {
   final ValueListenable<String> stepLabel;
   final ValueListenable<double> progress;
   final ValueListenable<SortingPlaybackState> playback;
+  final ValueListenable<bool> highlightInvariants;
+  final ValueListenable<List<String>> invariantSummaries;
   final List<ComplexityItem> complexity;
   final Color accent;
   final VoidCallback onPlayPause;
+  final ValueChanged<bool> onHighlightInvariantsChanged;
   final VoidCallback? onStepBack;
   final VoidCallback? onStepForward;
   final VoidCallback? onReset;
@@ -27,9 +30,12 @@ class SortingVisualizationSection extends StatelessWidget {
     required this.stepLabel,
     required this.progress,
     required this.playback,
+    required this.highlightInvariants,
+    required this.invariantSummaries,
     required this.complexity,
     required this.accent,
     required this.onPlayPause,
+    required this.onHighlightInvariantsChanged,
     this.onStepBack,
     this.onStepForward,
     this.onReset,
@@ -133,6 +139,13 @@ class SortingVisualizationSection extends StatelessWidget {
             },
           ),
           const SizedBox(height: 18),
+          _InvariantPanel(
+            accent: accent,
+            highlightInvariants: highlightInvariants,
+            invariantSummaries: invariantSummaries,
+            onHighlightInvariantsChanged: onHighlightInvariantsChanged,
+          ),
+          const SizedBox(height: 18),
           ValueListenableBuilder<double>(
             valueListenable: progress,
             builder: (_, value, __) => LinearProgressIndicator(
@@ -152,6 +165,130 @@ class SortingVisualizationSection extends StatelessWidget {
           ),
           const SizedBox(height: 28),
           _ComplexityGrid(complexity: complexity),
+        ],
+      ),
+    );
+  }
+}
+
+class _InvariantPanel extends StatelessWidget {
+  final Color accent;
+  final ValueListenable<bool> highlightInvariants;
+  final ValueListenable<List<String>> invariantSummaries;
+  final ValueChanged<bool> onHighlightInvariantsChanged;
+
+  const _InvariantPanel({
+    required this.accent,
+    required this.highlightInvariants,
+    required this.invariantSummaries,
+    required this.onHighlightInvariantsChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final TextStyle headingStyle =
+        theme.textTheme.bodyMedium?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w600,
+        ) ??
+        const TextStyle(color: Colors.white, fontWeight: FontWeight.w600);
+    final TextStyle helperStyle =
+        theme.textTheme.bodySmall?.copyWith(
+          color: Colors.white.withValues(alpha: 0.72),
+        ) ??
+        TextStyle(color: Colors.white.withValues(alpha: 0.72));
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ValueListenableBuilder<bool>(
+            valueListenable: highlightInvariants,
+            builder: (_, isEnabled, __) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Switch.adaptive(
+                    value: isEnabled,
+                    onChanged: onHighlightInvariantsChanged,
+                    activeColor: accent,
+                    trackColor: WidgetStatePropertyAll(
+                      accent.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Highlight invariants', style: headingStyle),
+                        const SizedBox(height: 2),
+                        Text(
+                          'Toggle to color pivots, merge pointers, and other algorithm invariants.',
+                          style: helperStyle,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+          ValueListenableBuilder<List<String>>(
+            valueListenable: invariantSummaries,
+            builder: (_, summaries, __) {
+              if (summaries.isEmpty) {
+                return Text(
+                  'This step has no special markers.',
+                  style: helperStyle,
+                );
+              }
+              return ValueListenableBuilder<bool>(
+                valueListenable: highlightInvariants,
+                builder: (_, isEnabled, __) {
+                  final Color chipColor = isEnabled
+                      ? accent.withValues(alpha: 0.25)
+                      : Colors.white.withValues(alpha: 0.12);
+                  final Color borderColor = isEnabled
+                      ? accent.withValues(alpha: 0.4)
+                      : Colors.white.withValues(alpha: 0.18);
+                  final TextStyle chipTextStyle = headingStyle.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  );
+                  return Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: summaries
+                        .map(
+                          (summary) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: chipColor,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: borderColor),
+                            ),
+                            child: Text(summary, style: chipTextStyle),
+                          ),
+                        )
+                        .toList(),
+                  );
+                },
+              );
+            },
+          ),
         ],
       ),
     );

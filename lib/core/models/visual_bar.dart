@@ -5,4 +5,4 @@ class VisualBar {
   VisualBar(this.value, this.state);
 }
 
-enum BarState { normal, comparing, swapping, sorted }
+enum BarState { normal, comparing, swapping, sorted, invariant }

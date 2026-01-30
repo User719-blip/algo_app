@@ -2,12 +2,13 @@ import 'package:algorythm_app/algorithms/base_algorithm.dart';
 import 'package:algorythm_app/algorithms/sorting/bubble_sort.dart';
 import 'package:algorythm_app/algorithms/sorting/insertion_sort.dart';
 import 'package:algorythm_app/algorithms/sorting/merge_sort.dart';
+import 'package:algorythm_app/algorithms/sorting/quick_sort.dart';
 import 'package:algorythm_app/algorithms/sorting/selection_sort.dart';
 import 'package:algorythm_app/core/models/algorithm_page_data.dart';
 import 'package:algorythm_app/core/models/complexity_item.dart';
 import 'package:algorythm_app/core/models/dry_run_pass.dart';
 
-enum SortingAlgorithmId { selection, insertion, bubble, merge }
+enum SortingAlgorithmId { selection, insertion, bubble, merge, quick }
 
 class SortingAlgorithmConfig {
   final SortingAlgorithmId id;
@@ -310,6 +311,100 @@ public static void mergeSort(int[] arr, int left, int right) {
   mergeSort(arr, left, mid);
   mergeSort(arr, mid + 1, right);
   merge(arr, left, mid, right);
+}
+''';
+
+const String _quickPseudoCode = '''procedure quickSort(arr, low, high):
+  if low >= high:
+    return
+  pivotIndex <- partition(arr, low, high)
+  quickSort(arr, low, pivotIndex - 1)
+  quickSort(arr, pivotIndex + 1, high)
+
+procedure partition(arr, low, high):
+  pivot <- arr[high]
+  i <- low
+  for j from low to high - 1:
+    if arr[j] <= pivot:
+      swap arr[i], arr[j]
+      i <- i + 1
+  swap arr[i], arr[high]
+  return i
+''';
+
+const String _quickCpp =
+    '''int partition(std::vector<int>& arr, int low, int high) {
+  int pivot = arr[high];
+  int i = low;
+  for (int j = low; j < high; ++j) {
+    if (arr[j] <= pivot) {
+      std::swap(arr[i], arr[j]);
+      ++i;
+    }
+  }
+  std::swap(arr[i], arr[high]);
+  return i;
+}
+
+void quickSort(std::vector<int>& arr, int low, int high) {
+  if (low >= high) {
+    return;
+  }
+  int pivotIndex = partition(arr, low, high);
+  quickSort(arr, low, pivotIndex - 1);
+  quickSort(arr, pivotIndex + 1, high);
+}
+''';
+
+const String _quickPython = '''def quick_sort(values):
+  arr = values[:]
+
+  def partition(low, high):
+    pivot = arr[high]
+    i = low
+    for j in range(low, high):
+      if arr[j] <= pivot:
+        arr[i], arr[j] = arr[j], arr[i]
+        i += 1
+    arr[i], arr[high] = arr[high], arr[i]
+    return i
+
+  def sort(low, high):
+    if low >= high:
+      return
+    pivot_index = partition(low, high)
+    sort(low, pivot_index - 1)
+    sort(pivot_index + 1, high)
+
+  sort(0, len(arr) - 1)
+  return arr
+''';
+
+const String _quickJava =
+    '''private static int partition(int[] arr, int low, int high) {
+  int pivot = arr[high];
+  int i = low;
+  for (int j = low; j < high; j++) {
+    if (arr[j] <= pivot) {
+      int temp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = temp;
+      i++;
+    }
+  }
+  int temp = arr[i];
+  arr[i] = arr[high];
+  arr[high] = temp;
+  return i;
+}
+
+public static void quickSort(int[] arr, int low, int high) {
+  if (low >= high) {
+    return;
+  }
+  int pivotIndex = partition(arr, low, high);
+  quickSort(arr, low, pivotIndex - 1);
+  quickSort(arr, pivotIndex + 1, high);
 }
 ''';
 
@@ -636,12 +731,96 @@ final SortingAlgorithmConfig mergeSortConfig = SortingAlgorithmConfig(
   ),
 );
 
+final SortingAlgorithmConfig quickSortConfig = SortingAlgorithmConfig(
+  id: SortingAlgorithmId.quick,
+  algorithm: QuickSort(),
+  data: AlgorithmPageData(
+    name: 'Quick Sort',
+    tagline: 'Partition around a pivot to split work into smaller problems.',
+    conceptSummary:
+        'Quick Sort selects a pivot and partitions the slice into elements lower and higher than the pivot before recursing on each side. The pivot lands in its final position after every partition.',
+    conceptPoints: [
+      'Choose a pivot from the current slice (here we use the rightmost element).',
+      'Walk the slice, pushing values less than or equal to the pivot toward the store index.',
+      'Swap the pivot into the store index to divide the array into two partitions.',
+      'Recursively repeat the process on the left and right partitions.',
+    ],
+    conceptUsage:
+        'Use Quick Sort for fast, in-place ordering when average O(n log n) behavior is acceptable and you want to emphasize divide-and-conquer thinking.',
+    dryRuns: [
+      DryRunPass(
+        title: 'First partition',
+        highlight:
+            'Pivot 8 scans the array and ends up fixed at the far right.',
+        steps: [
+          'Pivot = 8 compares with 5 -> stays left of the pivot boundary.',
+          'Compare 1 with pivot 8 -> stays in the left partition.',
+          'Compare 4 with pivot 8 -> stays in the left partition.',
+          'Compare 2 with pivot 8 -> stays in the left partition.',
+          'Pivot 8 already sits at index 4; lock it in place.',
+          'Index 4 is now sorted; recurse on [5, 1, 4, 2].',
+        ],
+      ),
+      DryRunPass(
+        title: 'Second partition',
+        highlight:
+            'Pivot 2 pulls the smaller elements to the front of the left slice.',
+        steps: [
+          'Pivot = 2 compares with 5 -> no swap because 5 > 2.',
+          'Compare 1 with pivot 2 -> swap with front -> [1, 5, 4, 2, 8].',
+          'Compare 4 with pivot 2 -> no swap; 4 stays to the right.',
+          'Swap pivot 2 into index 1 -> [1, 2, 4, 5, 8].',
+          'Indices 0 and 1 are now fixed; recurse on [4, 5].',
+        ],
+      ),
+      DryRunPass(
+        title: 'Final partitions',
+        highlight: 'Tiny slices of length 1 resolve without further swaps.',
+        steps: [
+          'Pivot = 5 compares with 4 -> keep partitions as-is.',
+          'Pivot 5 already sits at index 3; lock it in place.',
+          'Every remaining sub-array has size 1; the list is sorted.',
+        ],
+      ),
+    ],
+    complexity: [
+      ComplexityItem(
+        title: 'Best Case',
+        complexity: 'O(n log n)',
+        note: 'Balanced partitions cut the problem size in half each level.',
+      ),
+      ComplexityItem(
+        title: 'Average Case',
+        complexity: 'O(n log n)',
+        note: 'Random pivots tend to split the input evenly over time.',
+      ),
+      ComplexityItem(
+        title: 'Worst Case',
+        complexity: 'O(n²)',
+        note: 'Pathological pivots (already sorted data) degrade to n² work.',
+      ),
+      ComplexityItem(
+        title: 'Space',
+        complexity: 'O(log n)',
+        note: 'Recursion stack depth matches the height of the partition tree.',
+      ),
+    ],
+    pseudoCode: _quickPseudoCode,
+    implementations: {
+      'C++': _quickCpp,
+      'Python': _quickPython,
+      'Java': _quickJava,
+    },
+  ),
+);
+
 final Map<SortingAlgorithmId, SortingAlgorithmConfig> sortingAlgorithmCatalog =
     {
       SortingAlgorithmId.selection: selectionSortConfig,
       SortingAlgorithmId.insertion: insertionSortConfig,
       SortingAlgorithmId.bubble: bubbleSortConfig,
       SortingAlgorithmId.merge: mergeSortConfig,
+      SortingAlgorithmId.quick: quickSortConfig,
     };
 
 final List<SortingAlgorithmConfig> sortingAlgorithmList = [
@@ -649,4 +828,5 @@ final List<SortingAlgorithmConfig> sortingAlgorithmList = [
   insertionSortConfig,
   bubbleSortConfig,
   mergeSortConfig,
+  quickSortConfig,
 ];

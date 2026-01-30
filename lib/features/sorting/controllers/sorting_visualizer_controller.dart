@@ -23,6 +23,8 @@ class SortingVisualizerController extends ChangeNotifier {
   }
 
   final Duration _playbackInterval;
+  bool _highlightInvariants = false;
+
   final ValueNotifier<List<VisualBar>> barVisualNotifier =
       ValueNotifier<List<VisualBar>>(const []);
   final ValueNotifier<List<VisualTile>> tileVisualNotifier =
@@ -39,6 +41,11 @@ class SortingVisualizerController extends ChangeNotifier {
       ValueNotifier<SortingPlaybackState>(const SortingPlaybackState());
   final ValueNotifier<SortingPlaybackState> tilePlaybackNotifier =
       ValueNotifier<SortingPlaybackState>(const SortingPlaybackState());
+  final ValueNotifier<bool> highlightInvariantsNotifier = ValueNotifier<bool>(
+    false,
+  );
+  final ValueNotifier<List<String>> invariantSummaryNotifier =
+      ValueNotifier<List<String>>(const []);
 
   SortingVisualizerState? _state;
   Timer? _barTimer;
@@ -60,8 +67,10 @@ class SortingVisualizerController extends ChangeNotifier {
   AlgorithmStep get barStep => _steps[barPlayback.index];
   AlgorithmStep get tileStep => _steps[tilePlayback.index];
 
-  List<VisualBar> get barVisual => mapStepToBars(barStep);
-  List<VisualTile> get tileVisual => mapStepToTile(tileStep);
+  List<VisualBar> get barVisual =>
+      mapStepToBars(barStep, highlightInvariants: _highlightInvariants);
+  List<VisualTile> get tileVisual =>
+      mapStepToTile(tileStep, highlightInvariants: _highlightInvariants);
 
   String get barStepLabel => 'Step ${barPlayback.index + 1} / ${_steps.length}';
   String get tileStepLabel =>
@@ -71,6 +80,47 @@ class SortingVisualizerController extends ChangeNotifier {
   double get tileProgress => _progressFor(tilePlayback.index);
 
   String describeStep(AlgorithmStep step) {
+    final labels = step.invariantLabels.values;
+    bool containsLabel(String needle) =>
+        labels.any((label) => label.toLowerCase().contains(needle));
+
+    if (labels.isNotEmpty) {
+      if (containsLabel('pivot')) {
+        switch (step.type) {
+          case StepType.compare:
+            return 'Quick Sort: scanning values against the pivot boundary.';
+          case StepType.swap:
+            if (containsLabel('destination')) {
+              return 'Quick Sort: pivot slides into its final partition.';
+            }
+            return 'Quick Sort: expanding the partition boundary.';
+          case StepType.sorted:
+            return 'Quick Sort: pivot is now fixed in place.';
+        }
+      }
+
+      if (containsLabel('merged')) {
+        if (containsLabel('left')) {
+          return 'Merge Sort: writing from the left run into the merged array.';
+        }
+        if (containsLabel('right')) {
+          return 'Merge Sort: writing from the right run into the merged array.';
+        }
+      }
+
+      if (containsLabel('pointer')) {
+        return 'Merge Sort: comparing left and right pointers before merging.';
+      }
+
+      if (containsLabel('min candidate')) {
+        return 'Selection Sort: tracking the current minimum in the suffix.';
+      }
+
+      if (containsLabel('key value')) {
+        return 'Insertion Sort: positioning the key within the sorted prefix.';
+      }
+    }
+
     switch (step.type) {
       case StepType.compare:
         return 'Comparing index ${step.indexA} and ${step.indexB}';
@@ -149,7 +199,35 @@ class SortingVisualizerController extends ChangeNotifier {
     _updatePlayback(channel, playback.copyWith(index: playback.index - 1));
   }
 
+  void setHighlightInvariants(bool value) {
+    if (_highlightInvariants == value) {
+      return;
+    }
+    _highlightInvariants = value;
+    highlightInvariantsNotifier.value = value;
+    _refreshVisuals();
+  }
+
   bool get isInitialized => _state != null;
+
+  void _refreshVisuals() {
+    if (!isInitialized || _steps.isEmpty) {
+      return;
+    }
+    _publishFrame(
+      SortingPlaybackChannel.bars,
+      state.barPlayback,
+      step: barStep,
+      notify: false,
+    );
+    _publishFrame(
+      SortingPlaybackChannel.tiles,
+      state.tilePlayback,
+      step: tileStep,
+      notify: false,
+    );
+    notifyListeners();
+  }
 
   ValueListenable<List<VisualBar>> get barVisualListenable => barVisualNotifier;
   ValueListenable<List<VisualTile>> get tileVisualListenable =>
@@ -162,11 +240,17 @@ class SortingVisualizerController extends ChangeNotifier {
       barPlaybackNotifier;
   ValueListenable<SortingPlaybackState> get tilePlaybackListenable =>
       tilePlaybackNotifier;
+  ValueListenable<bool> get highlightInvariantsListenable =>
+      highlightInvariantsNotifier;
+  ValueListenable<List<String>> get invariantSummaryListenable =>
+      invariantSummaryNotifier;
 
   @override
   void dispose() {
     _cancelTimer(SortingPlaybackChannel.bars);
     _cancelTimer(SortingPlaybackChannel.tiles);
+    highlightInvariantsNotifier.dispose();
+    invariantSummaryNotifier.dispose();
     super.dispose();
   }
 
@@ -276,12 +360,19 @@ class SortingVisualizerController extends ChangeNotifier {
     bool notify = true,
   }) {
     if (channel == SortingPlaybackChannel.bars) {
-      barVisualNotifier.value = mapStepToBars(step);
+      barVisualNotifier.value = mapStepToBars(
+        step,
+        highlightInvariants: _highlightInvariants,
+      );
       barProgressNotifier.value = _progressFor(playback.index);
       barStepLabelNotifier.value =
           'Step ${playback.index + 1} / ${_steps.length}';
+      invariantSummaryNotifier.value = _formatInvariantSummaries(step);
     } else {
-      tileVisualNotifier.value = mapStepToTile(step);
+      tileVisualNotifier.value = mapStepToTile(
+        step,
+        highlightInvariants: _highlightInvariants,
+      );
       tileProgressNotifier.value = _progressFor(playback.index);
       tileStepLabelNotifier.value =
           'Step ${playback.index + 1} / ${_steps.length}';
@@ -289,5 +380,28 @@ class SortingVisualizerController extends ChangeNotifier {
     if (notify) {
       notifyListeners();
     }
+  }
+
+  List<String> _formatInvariantSummaries(AlgorithmStep step) {
+    if (step.invariantLabels.isEmpty && step.invariantIndices.isEmpty) {
+      return const [];
+    }
+    final Map<int, String> labels = step.invariantLabels.isNotEmpty
+        ? step.invariantLabels
+        : {
+            for (final index in step.invariantIndices)
+              index: 'Index ${index + 1}',
+          };
+
+    final List<String> summaries = [];
+    for (final entry in labels.entries) {
+      final index = entry.key;
+      if (index < 0 || index >= step.values.length) {
+        continue;
+      }
+      final value = step.values[index];
+      summaries.add('${entry.value} · index ${index + 1} (value $value)');
+    }
+    return List.unmodifiable(summaries);
   }
 }

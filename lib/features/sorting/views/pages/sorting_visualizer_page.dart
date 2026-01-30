@@ -98,50 +98,54 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
                 const SizedBox(height: 20),
                 Align(
                   alignment: Alignment.center,
-                  child: SegmentedButton<SortingAlgorithmId>(
-                    showSelectedIcon: false,
-                    segments: sortingAlgorithmList
-                        .map(
-                          (config) => ButtonSegment<SortingAlgorithmId>(
-                            value: config.id,
-                            label: Text(config.data.name),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: SegmentedButton<SortingAlgorithmId>(
+                      showSelectedIcon: false,
+                      segments: sortingAlgorithmList
+                          .map(
+                            (config) => ButtonSegment<SortingAlgorithmId>(
+                              value: config.id,
+                              label: Text(config.data.name),
+                            ),
+                          )
+                          .toList(),
+                      selected: {state.activeAlgorithm},
+                      style: ButtonStyle(
+                        padding: const WidgetStatePropertyAll(
+                          EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                        ),
+                        foregroundColor: WidgetStateProperty.resolveWith(
+                          (states) => Colors.white,
+                        ),
+                        backgroundColor: WidgetStateProperty.resolveWith(
+                          (states) => states.contains(WidgetState.selected)
+                              ? AppColors.sorted.withValues(alpha: 0.2)
+                              : Colors.white.withValues(alpha: 0.08),
+                        ),
+                        side: WidgetStateProperty.resolveWith(
+                          (states) => BorderSide(
+                            color: Colors.white.withValues(alpha: 0.25),
                           ),
-                        )
-                        .toList(),
-                    selected: {state.activeAlgorithm},
-                    style: ButtonStyle(
-                      padding: const WidgetStatePropertyAll(
-                        EdgeInsets.symmetric(horizontal: 22, vertical: 12),
-                      ),
-                      foregroundColor: WidgetStateProperty.resolveWith(
-                        (states) => Colors.white,
-                      ),
-                      backgroundColor: WidgetStateProperty.resolveWith(
-                        (states) => states.contains(WidgetState.selected)
-                            ? AppColors.sorted.withValues(alpha: 0.2)
-                            : Colors.white.withValues(alpha: 0.08),
-                      ),
-                      side: WidgetStateProperty.resolveWith(
-                        (states) => BorderSide(
-                          color: Colors.white.withValues(alpha: 0.25),
+                        ),
+                        overlayColor: WidgetStatePropertyAll(
+                          Colors.white.withValues(alpha: 0.12),
+                        ),
+                        textStyle: WidgetStatePropertyAll(
+                          theme.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ) ??
+                              const TextStyle(fontWeight: FontWeight.w600),
                         ),
                       ),
-                      overlayColor: WidgetStatePropertyAll(
-                        Colors.white.withValues(alpha: 0.12),
-                      ),
-                      textStyle: WidgetStatePropertyAll(
-                        theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ) ??
-                            const TextStyle(fontWeight: FontWeight.w600),
-                      ),
+                      onSelectionChanged: (selection) {
+                        final next = selection.first;
+                        if (next != state.activeAlgorithm) {
+                          _controller.selectAlgorithm(next);
+                        }
+                      },
                     ),
-                    onSelectionChanged: (selection) {
-                      final next = selection.first;
-                      if (next != state.activeAlgorithm) {
-                        _controller.selectAlgorithm(next);
-                      }
-                    },
                   ),
                 ),
                 const SizedBox(height: 32),
@@ -149,10 +153,16 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
                 const SizedBox(height: 28),
                 SortingVisualizationSection(
                   bars: _controller.barVisualListenable,
-                  complexity: state.data.complexity,
                   stepLabel: _controller.barStepLabelListenable,
-                  accent: barAccent,
                   progress: _controller.barProgressListenable,
+                  playback: _controller.barPlaybackListenable,
+                  highlightInvariants:
+                      _controller.highlightInvariantsListenable,
+                  invariantSummaries: _controller.invariantSummaryListenable,
+                  complexity: state.data.complexity,
+                  accent: barAccent,
+                  onHighlightInvariantsChanged:
+                      _controller.setHighlightInvariants,
                   onPlayPause: () =>
                       _controller.togglePlayback(SortingPlaybackChannel.bars),
                   onStepBack: barPlayback.index == 0
@@ -170,7 +180,6 @@ class _SortingVisualizerPageState extends State<SortingVisualizerPage> {
                       : () => _controller.resetPlayback(
                           SortingPlaybackChannel.bars,
                         ),
-                  playback: _controller.barPlaybackListenable,
                 ),
                 const SizedBox(height: 28),
                 SortingResourcesSection(
