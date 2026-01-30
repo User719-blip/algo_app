@@ -113,11 +113,31 @@ class AlgorithmAnimationPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 18),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 12,
-            runSpacing: 12,
-            children: controls,
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final double spacing = constraints.maxWidth < 360 ? 8 : 12;
+
+              return Align(
+                alignment: Alignment.center,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        for (int i = 0; i < controls.length; i++) ...[
+                          controls[i],
+                          if (i != controls.length - 1)
+                            SizedBox(width: spacing),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 18),
           SizedBox(

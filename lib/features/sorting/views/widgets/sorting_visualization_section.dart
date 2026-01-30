@@ -84,44 +84,52 @@ class SortingVisualizationSection extends StatelessWidget {
           LayoutBuilder(
             builder: (context, constraints) {
               final spacing = constraints.maxWidth < 360 ? 8.0 : 12.0;
-              final isNarrow = constraints.maxWidth < 380;
 
-              final toolbar = Wrap(
-                alignment: WrapAlignment.center,
-                spacing: spacing,
-                runSpacing: spacing,
-                children: [
-                  ControlIconButton(
-                    icon: Icons.rotate_left,
-                    tooltip: 'Reset to start',
-                    onTap: onReset,
+              final toolbarChildren = [
+                ControlIconButton(
+                  icon: Icons.rotate_left,
+                  tooltip: 'Reset to start',
+                  onTap: onReset,
+                ),
+                ControlIconButton(
+                  icon: Icons.skip_previous,
+                  tooltip: 'Previous step',
+                  onTap: onStepBack,
+                ),
+                ValueListenableBuilder<SortingPlaybackState>(
+                  valueListenable: playback,
+                  builder: (_, state, __) => PlayPauseButton(
+                    isPlaying: state.playing,
+                    onTap: onPlayPause,
                   ),
-                  ControlIconButton(
-                    icon: Icons.skip_previous,
-                    tooltip: 'Previous step',
-                    onTap: onStepBack,
-                  ),
-                  ValueListenableBuilder<SortingPlaybackState>(
-                    valueListenable: playback,
-                    builder: (_, state, __) => PlayPauseButton(
-                      isPlaying: state.playing,
-                      onTap: onPlayPause,
+                ),
+                ControlIconButton(
+                  icon: Icons.skip_next,
+                  tooltip: 'Next step',
+                  onTap: onStepForward,
+                ),
+              ];
+
+              return Align(
+                alignment: Alignment.center,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        for (int i = 0; i < toolbarChildren.length; i++) ...[
+                          toolbarChildren[i],
+                          if (i != toolbarChildren.length - 1)
+                            SizedBox(width: spacing),
+                        ],
+                      ],
                     ),
                   ),
-                  ControlIconButton(
-                    icon: Icons.skip_next,
-                    tooltip: 'Next step',
-                    onTap: onStepForward,
-                  ),
-                ],
+                ),
               );
-
-              return isNarrow
-                  ? SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: toolbar,
-                    )
-                  : toolbar;
             },
           ),
           const SizedBox(height: 18),
