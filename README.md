@@ -1,55 +1,236 @@
-# Algorythm App
+###link https://user719-blip.github.io/algo_app/
 
-A new Flutter application.
+# Algo Visualizer
 
-## Description
+An interactive Flutter application that helps users understand algorithms through visual animations, step-by-step execution, detailed explanations, and source code references.
 
-Algorythm App is a Flutter-based application project. This repository serves as the starting point for building out the algorithmic functionalities and user interface.
+## Overview
 
-## Getting Started
+Algo Visualizer is designed to make learning algorithms intuitive and engaging. Instead of reading static theory, users can watch algorithms execute in real time, understand each operation, and explore the logic behind every step.
 
-### Prerequisites
+Whether you're preparing for coding interviews, learning Data Structures & Algorithms, or teaching algorithm concepts, Algo Visualizer provides a visual and interactive learning experience.
 
-- [Flutter SDK](https://flutter.dev/docs/get-started/install) (sdk: ^3.8.1)
-- Dart SDK
-- A compatible IDE (e.g., VS Code, Android Studio)
+---
 
-### Installation
+## Features
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/User719-blip/algo_app.git
-   ```
-2. Navigate to the project directory:
-   ```bash
-   cd algo_app
-   ```
-3. Install dependencies:
-   ```bash
-   flutter pub get
-   ```
+### Algorithm Visualization
+Watch algorithms execute step-by-step with smooth animations.
 
-### Running the App
+Supported categories include:
 
-To run the app on an emulator, simulator, or a connected device, use the following command:
+- Sorting Algorithms
+  - Bubble Sort
+  - Selection Sort
+  - Insertion Sort
+  - Merge Sort
+  - Quick Sort
+
+- Array Algorithms
+  - Kadane's Algorithm
+  - Prefix Sum
+  - Sliding Window
+
+- Searching Algorithms*(planned)*
+  - Linear Search
+  - Binary Search
+
+- Graph Algorithms *(Planned)*
+  - BFS
+  - DFS
+  - Dijkstra's Algorithm
+
+- Tree Algorithms *(Planned)*
+  - Tree Traversals
+  - Binary Search Tree Operations
+
+---
+
+### Step-by-Step Explanation
+
+Each algorithm includes:
+
+- Problem Statement
+- Algorithm Description
+- Time Complexity
+- Space Complexity
+- Execution Flow
+- Real-time State Updates
+
+Users can understand not only *what* happens but also *why* it happens.
+
+---
+
+### Source Code Reference
+
+View implementation code directly inside the application.
+
+Supported languages m include:
+
+- C++
+- Java
+- Python
+
+This helps learners connect visual execution with actual implementation.
+
+---
+
+### Interactive Controls
+
+- Start Visualization
+- Pause Execution
+- Resume Execution
+- Reset Algorithm
+- Control Animation Speed
+- Step Forward
+- Step Backward
+
+---
+
+## Why Algo Visualizer?
+
+Learning algorithms from textbooks can be difficult because the internal operations remain hidden.
+
+Algo Visualizer solves this by:
+
+- Making abstract concepts visible
+- Showing how data changes during execution
+- Improving interview preparation
+- Helping students retain concepts longer
+- Bridging theory and implementation
+
+---
+
+## Tech Stack
+
+### Frontend
+- Flutter
+- Dart
+
+### State Management
+- BLoC / Cubit *(if used)*
+- Provider *(if used)*
+
+### Architecture
+- Clean Architecture
+- Feature-First Structure
+
+---
+
+
+
+---
+
+## Project Structure
+
+```text
+lib/
+│
+├── core/
+│   ├── constants/
+│   ├── utils/
+│   └── theme/
+│
+├── features/
+│   ├── sorting/
+│   ├── searching/
+│   ├── kadane/
+│   ├── visualizer/
+│   └── code_viewer/
+│
+└── main.dart
+```
+
+---
+
+## Installation
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/User719-blip/algo_app.git
+```
+
+### Navigate to Project
+
+```bash
+cd algo_app
+```
+
+### Install Dependencies
+
+```bash
+flutter pub get
+```
+
+### Run the Application
 
 ```bash
 flutter run
 ```
 
-## Project Structure
+---
 
-- `lib/` - Main source code directory where the Dart code resides.
-  - `main.dart` - Entry point of the Flutter application.
-- `assets/` - Directory for static assets like images, fonts, etc.
-- `android/` - Android-specific configuration and build files.
-- `web/` - Web-specific configuration and build files.
+## Learning Goals
 
-## Resources
+This project aims to help users:
 
-A few resources to get you started if this is your first Flutter project:
+- Understand algorithm internals
+- Visualize data transformations
+- Improve DSA problem-solving skills
+- Prepare for coding interviews
+- Learn algorithm implementation patterns
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+---
 
-For help getting started with Flutter development, view the [online documentation](https://docs.flutter.dev/), which offers tutorials, samples, guidance on mobile development, and a full API reference.
+## Future Roadmap
+
+- More Sorting Algorithms
+- Graph Visualizations
+- Dynamic Programming Visualizations
+- Tree Algorithms
+- Complexity Comparisons
+- Interactive Challenges
+- Quiz Mode
+- Custom Input Support
+- Dark Mode Enhancements
+- Web Deployment
+
+---
+
+## Contributions
+
+Contributions are welcome.
+
+If you would like to:
+
+- Add new algorithms
+- Improve visualizations
+- Optimize performance
+- Enhance UI/UX
+
+Feel free to fork the repository and create a pull request.
+
+---
+
+## Author
+
+Aryan Mishra
+
+- B.Tech CSE, Uttaranchal University
+- IEEE UU Chapter Secretary
+- Passionate about Flutter, Backend Development, and DSA
+
+GitHub:
+
+[github.com](https://reference-url-citation.invalid/0)
+
+---
+
+## License
+
+This project is licensed under the MIT License.
+
+---
+
+### Learn Algorithms. Visualize Logic. Build Intuition.
